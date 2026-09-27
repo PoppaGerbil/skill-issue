@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Skill Issue Mockup</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0c0d11; --panel:#16181f; --panel2:#1e2129; --line:#2a2e39; --text:#eceef3; --muted:#8a90a0;
+  --accent:#ff3d52; --accent2:#ffcc33; --win:#35d07f; --loss:#ff5a67; --radius:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#050608;color:var(--text);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif}
+#app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:84px}
+button,input,select,textarea{font:inherit;color:inherit}
+header.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;background:linear-gradient(var(--bg) 70%,transparent)}
+.brand{font-weight:900;letter-spacing:.06em;font-size:20px;font-style:italic}
+.brand span{color:var(--accent);margin-left:4px}
+.mock{font-size:10px;letter-spacing:.14em;color:var(--muted);border:1px solid var(--line);padding:3px 7px;border-radius:99px}
+.tab{display:none;padding:0 16px}
+.tab.active{display:block}
+h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 2px 8px;font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.sub{margin-top:12px}
+.sublbl{font-size:12px;color:var(--muted);margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--panel2);border-radius:99px;padding:7px 12px;font-size:14px;cursor:pointer;white-space:nowrap;transition:background .12s,border-color .12s}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.chip.ghost{background:transparent;border-style:dashed;color:var(--muted)}
+.chips.big .chip{flex:1;text-align:center;padding:10px 0;font-weight:700}
+.chips.big .chip.on.w{background:var(--win);border-color:var(--win);color:#062414}
+.chips.big .chip.on.l{background:var(--loss);border-color:var(--loss)}
+.txt,select.txt,textarea.txt{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
+.txt:focus{border-color:var(--accent)}
+textarea.txt{min-height:70px;resize:vertical}
+.row{display:flex;gap:8px;align-items:center}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;position:relative}
+.stat label{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.stat input{width:100%;background:none;border:none;outline:none;font-size:26px;font-weight:800;padding:0}
+.kd-bad{color:#ff5a67!important}
+.kd-ok{color:#ffcc33!important}
+.kd-good{color:#35d07f!important}
+.kd-ruby{color:#e0115f!important;animation:ruby 2.2s ease-in-out infinite}
+@keyframes ruby{0%,100%{color:#c2104f;text-shadow:0 0 4px rgba(224,17,95,.45)}50%{color:#ff4d8d;text-shadow:0 0 10px rgba(255,77,141,.9),0 0 18px rgba(224,17,95,.5)}}
+.stat .tag{position:absolute;top:7px;right:8px;font-size:9px;letter-spacing:.1em;color:var(--muted);display:none}
+.stat.auto .tag{display:block}
+.rs{display:flex;gap:8px}
+.rs button{width:48px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);font-size:20px;font-weight:800}
+.rs button.pos{color:var(--win)} .rs button.neg{color:var(--loss)}
+.rs button.on.pos{background:var(--win);border-color:var(--win);color:#062414} .rs button.on.neg{background:var(--loss);border-color:var(--loss);color:#fff}
+.chips.grid3{display:grid;grid-template-columns:repeat(3,1fr)}
+.wrow{display:grid;grid-template-columns:108px 1fr;gap:8px;align-items:center;margin-bottom:6px}
+.wrow .chip{text-align:center}
+.wrow input{padding:8px 10px}
+.hide{display:none!important}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.save{position:sticky;bottom:78px;margin:14px 0 6px;width:100%;padding:15px;border:none;border-radius:14px;background:var(--accent);color:#fff;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:15px;box-shadow:0 8px 24px rgba(255,61,82,.3);cursor:pointer}
+.editbar{background:#2b2210;border:1px solid #5b4715;color:var(--accent2);border-radius:12px;padding:10px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.editbar button{background:none;border:1px solid #5b4715;color:var(--accent2);border-radius:8px;padding:4px 10px}
+.inline{display:flex;gap:6px;margin-top:8px}
+.inline .txt{padding:8px 10px}
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:14px;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.btn.sm{padding:5px 9px;font-size:13px}
+
+/* nav */
+nav.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;display:flex;background:rgba(18,19,24,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:10}
+nav.bottom button{flex:1;background:none;border:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+nav.bottom button.on{color:var(--accent)}
+nav svg{width:24px;height:24px}
+
+/* record */
+.toolbar{display:flex;gap:6px;align-items:center;justify-content:space-between;margin:4px 0 10px;flex-wrap:wrap}
+.rec{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.rec .r1{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}
+.rec .r2{display:flex;justify-content:space-between;align-items:flex-end;margin-top:4px}
+.rec .title{font-weight:700;font-size:16px}
+.rec .kd{font-size:24px;font-weight:900;line-height:1}
+.rec .kd small{display:block;font-size:11px;color:var(--muted);font-weight:600;text-align:right;margin-top:2px}
+.badge{font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;letter-spacing:.05em}
+.badge.W{background:rgba(53,208,127,.15);color:var(--win)} .badge.L{background:rgba(255,90,103,.15);color:var(--loss)}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.tags span{font-size:11px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 6px;color:#c5c9d4}
+.tags span.warn{border-color:#5b4715;color:var(--accent2)}
+.detail{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:#c5c9d4}
+.detail div{margin-bottom:3px}
+.detail b{color:var(--muted);font-weight:600}
+
+/* graph */
+.seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;overflow-x:auto}
+.seg button{flex:1;border:none;background:none;border-radius:8px;padding:7px 8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--accent);color:#fff}
+.gctl{display:grid;gap:8px;margin-bottom:10px}
+.chartwrap{height:280px;position:relative}
+.legendnote{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.legendnote i{display:inline-block;width:9px;height:9px;background:var(--muted);margin-right:5px;vertical-align:middle}
+.legendnote i.c{border-radius:50%}
+.ln{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px}
+.ln.off{opacity:.45}
+.ln .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.ln .meta{flex:1;min-width:0}
+.ln .name{font-weight:700;font-size:14px}
+.ln .sum{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ln .ib{background:none;border:none;color:var(--muted);padding:4px;cursor:pointer}
+.ln .ib svg{width:18px;height:18px}
+.add{width:100%;border:1px dashed var(--line);background:none;color:var(--text);border-radius:12px;padding:11px;font-weight:700;cursor:pointer}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:none}
+.scrim.open{display:block}
+.sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:430px;max-height:88vh;overflow:auto;background:var(--bg);border-top:1px solid var(--line);border-radius:18px 18px 0 0;z-index:21;padding:8px 16px 24px;display:none}
+.sheet.open{display:block}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:4px auto 10px}
+.sheethead{display:flex;justify-content:space-between;align-items:center;position:sticky;top:-8px;background:var(--bg);padding:6px 0 10px;z-index:2}
+.swatches{display:flex;gap:8px}
+.sw{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+.sw.on{border-color:#fff}
+.fsec{margin-top:14px}
+.fsec .sublbl{display:flex;justify-content:space-between}
+.fsec .sublbl em{font-style:normal;color:var(--accent2)}
+
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:#fff;color:#111;padding:10px 16px;border-radius:99px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:40;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top"><div class="brand">SKILL<span>ISSUE</span></div><div class="mock">MOCKUP · SAMPLE DATA</div></header>
+
+  <!-- ENTRY -->
+  <section id="tab-entry" class="tab active">
+    <div id="editbar" class="editbar hide"><span>Editing an entry</span><button id="cancel-edit">Cancel</button></div>
+
+    <div class="card">
+      <div class="lbl">When <span style="text-transform:none;letter-spacing:0;font-weight:500">auto · tap to change</span></div>
+      <input type="datetime-local" id="f-ts" class="txt">
+    </div>
+
+    <div class="card">
+      <div class="lbl">Game mode</div>
+      <div class="chips" id="c-mode"></div>
+      <input id="f-modeOther" class="txt sub hide" placeholder="Which mode?">
+    </div>
+
+    <div class="card">
+      <div class="lbl">Result</div>
+      <div class="chips big" id="c-result"></div>
+      <div id="place-wrap" class="sub hide">
+        <div class="sublbl">Placement</div>
+        <div class="chips big grid3" id="c-place"></div>
+      </div>
+      <div id="stage-wrap" class="sub hide">
+        <div class="sublbl">Ranked stage</div>
+        <div class="chips" id="c-stage"></div>
+      </div>
+      <div id="rs-wrap" class="sub hide">
+        <div class="sublbl">RS gained / lost <span style="opacity:.7">· graphed as win if +, loss if −</span></div>
+        <div class="rs"><button type="button" id="rs-plus" class="pos">+</button><button type="button" id="rs-minus" class="neg">−</button><input id="f-rs" class="txt" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Stats</div>
+      <div class="stats">
+        <div class="stat"><label>Kills</label><input id="f-k" inputmode="numeric" pattern="[0-9]*" placeholder="–"></div>
+        <div class="stat"><label>Deaths</label><input id="f-d" inputmode="numeric" pattern="[0-9]*" placeholder="–"></div>
+        <div class="stat" id="kd-stat"><label>K/D</label><span class="tag">AUTO</span><input id="f-kd" inputmode="decimal" placeholder="–"></div>
+      </div>
+      <div class="hint">K/D fills in from kills ÷ deaths. You can also type K/D yourself and leave kills and deaths blank.</div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Party, Solo, or MommaGerbil?</div>
+      <div class="chips" id="c-squad"></div>
+      <div id="friend-add" class="inline hide"><input id="friend-name" class="txt" placeholder="Name"><button class="btn primary" id="friend-ok">Add</button></div>
+      <div id="party-wrap" class="hide">
+        <div class="sub sublbl">Party size</div>
+        <div class="chips" id="c-psize"></div>
+        <div class="sub sublbl">Teammate skill level</div>
+        <select id="f-teammate" class="txt"></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Medicated?</div>
+      <div class="chips big" id="c-med"></div>
+      <div class="sub lbl">Mental + Physical</div>
+      <div class="chips" id="c-mental"></div>
+      <div class="sub lbl">Lag?</div>
+      <div class="chips" id="c-lag"></div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Loadout</div>
+      <div class="chips" id="c-saved"></div>
+      <div id="saveload" class="inline hide"><input id="saveload-name" class="txt" placeholder="Name this loadout, e.g. Heavy Goo"><button class="btn primary" id="saveload-ok">Save</button></div>
+      <div class="sub sublbl">Build</div>
+      <div class="chips" id="c-build"></div>
+      <div class="sub sublbl">Weapon</div>
+      <div id="weapons"></div>
+      <div class="sub sublbl">Spec</div>
+      <div class="chips" id="c-spec"></div>
+      <input id="f-specOther" class="txt sub hide" placeholder="Other spec">
+    </div>
+
+    <div class="card">
+      <div class="lbl">Map</div>
+      <select id="f-map" class="txt"></select>
+      <input id="f-mapOther" class="txt sub hide" placeholder="">
+    </div>
+
+    <div class="card">
+      <div class="lbl">Other</div>
+      <textarea id="f-notes" class="txt" placeholder="Random notes…"></textarea>
+    </div>
+
+    <button class="save" id="save">Save game</button>
+  </section>
+
+  <!-- RECORD -->
+  <section id="tab-record" class="tab">
+    <h2 id="rec-count">Record</h2>
+    <div class="toolbar">
+      <div class="seg" id="rec-sort" style="flex:none"><button data-v="new" class="on">Newest</button><button data-v="old">Oldest</button></div>
+      <div class="row"><button class="btn sm" id="exp-xlsx">Export .xlsx</button><button class="btn sm" id="exp-csv">.csv</button></div>
+    </div>
+    <div id="rec-list"></div>
+  </section>
+
+  <!-- GRAPH -->
+  <section id="tab-graph" class="tab">
+    <h2>Graph</h2>
+    <div class="gctl">
+      <div class="seg" id="g-metric"></div>
+      <div class="seg" id="g-range"></div>
+      <div class="seg" id="g-view"></div>
+    </div>
+    <div class="card">
+      <div class="chartwrap"><canvas id="chart"></canvas></div>
+      <div class="legendnote"><span><i class="c"></i>single build</span><span><i></i>= mixed build</span><span id="metric-note"></span></div>
+    </div>
+    <div class="row" style="justify-content:space-between;margin:14px 2px 8px">
+      <h2 style="margin:0">Lines</h2>
+      <div class="row"><select id="g-preset" class="txt" style="padding:6px 8px;width:auto;font-size:13px"></select><button class="btn sm" id="g-savepreset">Save preset</button></div>
+    </div>
+    <div id="presetsave" class="inline hide" style="margin-bottom:8px"><input id="preset-name" class="txt" placeholder="Preset name, e.g. Medium weapons compare"><button class="btn primary" id="preset-ok">Save</button></div>
+    <div id="g-lines"></div>
+    <button class="add" id="g-add">+ Add line</button>
+    <div class="row" style="margin:14px 0 20px;justify-content:flex-end"><button class="btn sm" id="g-png">Export PNG</button><button class="btn sm" id="g-csv">Export data .csv</button></div>
+  </section>
+
+  <nav class="bottom">
+    <button data-tab="entry" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Entry</button>
+    <button data-tab="record"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Record</button>
+    <button data-tab="graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 4 3 5-7"/></svg>Graph</button>
+  </nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet"></div>
+  <div id="toast"></div>
+</div>
+
+<script>
+/* ---------- constants ---------- */
+const MODES=['Pointbreak','Cashout','Ranked','Other'];
+const MAPS=['Bernal','Fangwai','Fortune','Kyoto','Monaco','Nozomi','PEACE Center','Seoul','Skyway','Starlight','Sys','Vegas','Vegas Stadium'];
+const MENTAL=['Locked','Crashing Out','Distracted/Tired/Over It'];
+const LAG=['None','Some','A lot','Unplayable','Great Connection','Glitch/Bug'];
+const LAGGY=new Set(['Some','A lot','Unplayable','Glitch/Bug']);
+const SKILL=['All Below','All Same','All Above','Below + Same','Below + Above','Same + Above','Below, Same & Above'];
+const PLACES=[{v:1,l:'1st'},{v:2,l:'2nd'},{v:3,l:'3rd'},{v:4,l:'4th'},{v:5.5,l:'5th/6th'},{v:7.5,l:'7th/8th'}];
+const STAGES=['Qualified for Final','Qualified for 2nd round','Knocked out'];
+const stageFor=p=>p<=2?STAGES[0]:p<=4?STAGES[1]:STAGES[2];
+const BUILDS=['Light','Medium','Heavy'];
+const WTYPES=['Automatic','Poke','Burst','Melee','Sustain'];
+const SPECS=['Shockwave','Demat','HealBeam','Turret','C+S','Winch','GooGun','Shield','Invis','Dash','Grapple','Other'];
+const COLORS=['#ff3d52','#4dabff','#ffcc33','#35d07f','#c77dff','#ff8c42','#2ee6d6','#f06bb3'];
+let friends=['MommaGerbil'];
+
+/* ---------- sample data ---------- */
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=rng(7), pick=a=>a[Math.floor(R()*a.length)], ri=(a,b)=>a+Math.floor(R()*(b-a+1));
+const POOL={
+  Light:{w:{Automatic:['M11','XP-54','ARN-220'],Poke:['LH1','M26 Matter'],Burst:['93R'],Melee:['Dagger','Sword']},s:['Invis','Grapple','Dash']},
+  Medium:{w:{Automatic:['FCAR','AKM'],Burst:['FAMAS'],Poke:['Pike-556'],Melee:['Riot Shield']},s:['HealBeam','Turret','Demat']},
+  Heavy:{w:{Automatic:['M60','Lewis Gun'],Poke:['KS-23'],Melee:['Sledgehammer','Spear'],Sustain:['Flamethrower']},s:['C+S','GooGun','Shield','Winch']}
+};
+let data=[], nextId=1;
+function fillPlace(e){ // sample-data only
+  e.place=null; e.stage=null; e.rs=null;
+  if(e.mode!=='Cashout'&&e.mode!=='Ranked') return;
+  e.place=e.result==='W'?1:pick([2,3,4,5.5,7.5]);
+  if(e.mode==='Ranked'){ e.stage=stageFor(e.place);
+    e.rs=e.place===1?ri(40,60):e.place===2?ri(15,35):e.place===3?(R()<.7?ri(5,20):-ri(3,10)):e.place===4?(R()<.4?ri(2,10):-ri(5,20)):-ri(10,32); }
+}
+(function gen(){
+  const now=Date.now(), DAY=864e5;
+  for(let d=34; d>=0; d--){
+    if(R()<.35) continue;
+    const n=ri(1,4); let t=now-d*DAY-ri(2,8)*36e5;
+    for(let i=0;i<n;i++){
+      t+=ri(20,40)*6e4;
+      const primary=R()<.2?'Light':R()<.6?'Medium':'Heavy';
+      let builds=[primary]; if(R()<.14) builds.push(pick(BUILDS.filter(b=>b!==primary)));
+      const weapons={}, specs=[];
+      builds.forEach(b=>{const types=Object.keys(POOL[b].w), ty=pick(types); weapons[ty]=pick(POOL[b].w[ty]); const s=pick(POOL[b].s); if(!specs.includes(s)) specs.push(s);});
+      const mental=R()<.5?'Locked':R()<.5?'Crashing Out':'Distracted/Tired/Over It';
+      const lag=R()<.55?'None':R()<.3?'Great Connection':pick(['Some','A lot','Unplayable','Glitch/Bug']);
+      const r=R(); const squad=r<.45?['Solo']:r<.7?['MommaGerbil']:r<.85?['Party']:['Party','MommaGerbil'];
+      let bias=(mental==='Locked'?3:mental==='Crashing Out'?-2:-1)+(LAGGY.has(lag)?-2:0)+(builds.includes('Heavy')?1:0)+(squad[0]!=='Solo'?1:0)+(34-d)*.06;
+      const kills=Math.max(0,ri(5,14)+Math.round(bias)), deaths=Math.max(1,ri(6,12)-Math.round(bias/2));
+      const kd=+(kills/deaths).toFixed(2);
+      const mode=R()<.4?'Cashout':R()<.55?'Ranked':R()<.85?'Pointbreak':'Other';
+      const win=R()<Math.min(.85,Math.max(.1,kd*.4));
+      const g={mode,result:win?'W':'L'}; fillPlace(g);
+      data.push({id:nextId++,ts:t,mode,modeOther:mode==='Other'?'Terminal Attack':'',result:win?'W':'L',place:g.place,stage:g.stage,rs:g.rs,kills,deaths,kd,kdManual:false,
+        squad,partySize:squad.includes('Party')?ri(3,4):null,teammate:squad.includes('Party')?pick(SKILL):null,med:R()<.6?'Yes':'No',mental,lag,
+        builds,weapons,specs,specOther:'',map:R()<.06?'LTM':pick(MAPS),mapOther:'',notes:R()<.12?pick(['cheater in lobby?','got third partied every round','new sens felt good','carried by MommaGerbil']):''});
+    }
+  }
+  // make sure the example "Heavy + Kyoto/Seoul + Ranked" line has some games to show
+  data.filter(e=>e.builds.includes('Heavy')).filter((_,i)=>i%3===0).forEach((e,i)=>{
+    e.map=i%2?'Kyoto':'Seoul'; e.mode='Ranked'; e.modeOther=''; fillPlace(e);
+  });
+})();
+let saved=[
+  {name:'Heavy Goo',builds:['Heavy'],weapons:{Automatic:'M60'},specs:['GooGun']},
+  {name:'Med FCAR Heal',builds:['Medium'],weapons:{Automatic:'FCAR'},specs:['HealBeam']},
+];
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800)}
+function chips(el,opts,get,set,multi,cls){
+  el.innerHTML='';
+  opts.forEach(o=>{
+    const v=typeof o==='object'?o.v:o, l=typeof o==='object'?o.l:o;
+    const b=document.createElement('button'); b.type='button'; b.className='chip'+(cls?' '+cls(v):''); b.textContent=l;
+    const cur=get(); if(multi?cur.includes(v):cur===v) b.classList.add('on');
+    b.onclick=()=>{const c=get(); if(multi) set(c.includes(v)?c.filter(x=>x!==v):[...c,v]); else set(c===v?null:v); chips(el,opts,get,set,multi,cls)};
+    el.appendChild(b);
+  });
+}
+const pad=n=>String(n).padStart(2,'0');
+const toLocalInput=ts=>{const d=new Date(ts);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const fmtDate=ts=>new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+const fmtDT=ts=>new Date(ts).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+const ord=v=>PLACES.find(p=>p.v===v)?.l??'';
+const isMixed=e=>e.builds.length>1;
+const kdTier=v=>v===''||v==null||isNaN(v)?'':v<1?'kd-bad':v<2?'kd-ok':v<3?'kd-good':'kd-ruby';
+function paintKD(){const i=$('#f-kd');i.classList.remove('kd-bad','kd-ok','kd-good','kd-ruby');const t=kdTier(i.value===''?'':+i.value);if(t)i.classList.add(t)}
+const modeName=e=>e.mode==='Other'?(e.modeOther||'Other'):e.mode;
+const mapName=e=>(e.map==='LTM'||e.map==='Other')&&e.mapOther?`${e.map}: ${e.mapOther}`:e.map;
+const isSolo=e=>!e.squad.length||e.squad.includes('Solo');
+const squadName=e=>isSolo(e)?'Solo':e.squad.map(s=>s==='Party'?(e.partySize?`Party of ${e.partySize}`:'Party'):s).join(' + ');
+// Ranked: RS gained = win, RS lost = loss (for graphing). Falls back to the entered result.
+const winOf=e=>e.mode==='Ranked'&&e.rs?(e.rs>0?'W':'L'):e.result;
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('nav.bottom button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function showTab(t){
+  document.querySelectorAll('nav.bottom button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('active',s.id==='tab-'+t));
+  if(t==='record') renderRecord(); if(t==='graph') renderGraph();
+  window.scrollTo(0,0);
+}
+
+/* ---------- ENTRY ---------- */
+let f, editingId=null, rsSign=null;
+function blankForm(carry){
+  return {ts:Date.now(),mode:null,modeOther:'',result:null,place:null,stage:null,rs:'',kills:'',deaths:'',kd:'',kdManual:false,
+    squad:carry?.squad?[...carry.squad]:[],partySize:carry?.partySize??null,teammate:carry?.teammate??null,med:carry?.med??null,
+    mental:null,lag:null,builds:[],weapons:{},specs:[],specOther:'',map:'',mapOther:'',notes:''};
+}
+f=blankForm();
+
+function mountEntry(){
+  $('#f-ts').value=toLocalInput(f.ts);
+  chips($('#c-mode'),MODES,()=>f.mode,v=>{f.mode=v;refresh()});
+  mountResult();
+  chips($('#c-place'),PLACES,()=>f.place,v=>{f.place=v;if(v){f.result=v===1?'W':'L';f.stage=stageFor(v);mountResult();mountStage()}refresh()});
+  mountStage();
+  mountSquad();
+  chips($('#c-psize'),[2,3,4,5,6,7,8,9,10].map(n=>({v:n,l:String(n)})),()=>f.partySize,v=>{f.partySize=v});
+  $('#f-teammate').innerHTML='<option value="">Select…</option>'+SKILL.map(s=>`<option ${f.teammate===s?'selected':''}>${s}</option>`).join('');
+  chips($('#c-med'),['Yes','No'],()=>f.med,v=>{f.med=v});
+  chips($('#c-mental'),MENTAL,()=>f.mental,v=>{f.mental=v});
+  chips($('#c-lag'),LAG,()=>f.lag,v=>{f.lag=v});
+  mountSaved();
+  mountLoadout();
+  $('#f-map').innerHTML='<option value="">Select map…</option>'+MAPS.map(m=>`<option>${m}</option>`).join('')+'<option disabled>──────────</option><option>LTM</option><option>Other</option>';
+  $('#f-map').value=f.map;
+  ['modeOther','specOther','mapOther','notes'].forEach(k=>$('#f-'+k).value=f[k]);
+  $('#f-rs').value=f.rs===''?'':Math.abs(f.rs); setSign(f.rs===''?null:f.rs<0?-1:1);
+  $('#f-k').value=f.kills; $('#f-d').value=f.deaths; $('#f-kd').value=f.kd;
+  refresh();
+}
+function mountResult(){chips($('#c-result'),[{v:'W',l:'Win'},{v:'L',l:'Loss'}],()=>f.result,v=>{f.result=v;refresh()},false,v=>v==='W'?'w':'l')}
+function mountStage(){chips($('#c-stage'),STAGES,()=>f.stage,v=>{f.stage=v})}
+function mountSquad(){
+  const el=$('#c-squad');
+  // Solo is exclusive; Party, MommaGerbil and added names can be combined
+  chips(el,['Solo','Party',...friends],()=>f.squad,v=>{
+    const added=v.find(x=>!f.squad.includes(x));
+    f.squad=added==='Solo'?['Solo']:added?v.filter(x=>x!=='Solo'):v;
+    mountSquad(); refresh();
+  },true);
+  const add=document.createElement('button'); add.type='button'; add.className='chip ghost'; add.textContent='+ Add name';
+  add.onclick=()=>{$('#friend-add').classList.toggle('hide');$('#friend-name').focus()}; el.appendChild(add);
+}
+$('#friend-ok').onclick=()=>{const n=$('#friend-name').value.trim(); if(!n) return; if(!friends.includes(n)) friends.push(n); f.squad=[...f.squad.filter(x=>x!=='Solo'),n]; $('#friend-name').value=''; $('#friend-add').classList.add('hide'); mountSquad(); refresh(); toast(`Added ${n}`)};
+function mountSaved(){
+  const el=$('#c-saved'); el.innerHTML='';
+  const mk=(txt,cls,fn)=>{const b=document.createElement('button');b.type='button';b.className='chip '+cls;b.textContent=txt;b.onclick=fn;el.appendChild(b)};
+  mk('↺ Same as last game','',()=>{const last=[...data].sort((a,b)=>b.ts-a.ts)[0]; if(last){applyLoadout(last); toast('Loaded last game’s loadout')}});
+  saved.forEach(s=>mk('★ '+s.name,'',()=>{applyLoadout(s); toast(`Loaded “${s.name}”`)}));
+  mk('+ Save current','ghost',()=>{if(!f.builds.length&&!f.specs.length&&!Object.keys(f.weapons).length){toast('Pick a loadout first');return}$('#saveload').classList.toggle('hide');$('#saveload-name').focus()});
+}
+$('#saveload-ok').onclick=()=>{const n=$('#saveload-name').value.trim(); if(!n) return; saved.push({name:n,builds:[...f.builds],weapons:{...f.weapons},specs:[...f.specs],specOther:f.specOther}); $('#saveload-name').value=''; $('#saveload').classList.add('hide'); mountSaved(); toast(`Saved “${n}”`)};
+function applyLoadout(s){f.builds=[...s.builds];f.weapons={...s.weapons};f.specs=[...s.specs];f.specOther=s.specOther||'';$('#f-specOther').value=f.specOther;mountLoadout();refresh()}
+function weaponHistory(t){return [...new Set(data.map(e=>e.weapons[t]).filter(Boolean))].sort()}
+function mountLoadout(){
+  chips($('#c-build'),BUILDS,()=>f.builds,v=>{f.builds=v},true);
+  chips($('#c-spec'),SPECS,()=>f.specs,v=>{f.specs=v;refresh()},true);
+  const w=$('#weapons'); w.innerHTML='';
+  WTYPES.forEach(t=>{
+    const on=t in f.weapons;
+    const row=document.createElement('div'); row.className='wrow';
+    row.innerHTML=`<button type="button" class="chip ${on?'on':''}">${t}</button>
+      <input class="txt ${on?'':'hide'}" list="dl-${t}" placeholder="${t} weapon, e.g. ${weaponHistory(t)[0]||'name'}" value="${esc(f.weapons[t]||'')}">
+      <datalist id="dl-${t}">${weaponHistory(t).map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`;
+    const [btn,inp]=row.querySelectorAll('button,input');
+    btn.onclick=()=>{if(t in f.weapons) delete f.weapons[t]; else f.weapons[t]=''; mountLoadout(); if(t in f.weapons) w.querySelector(`input[list="dl-${t}"]`).focus()};
+    inp.oninput=()=>f.weapons[t]=inp.value;
+    w.appendChild(row);
+  });
+  if(!Object.keys(f.weapons).length){const h=document.createElement('div');h.className='hint';h.style.marginTop='0';h.textContent='Tap one or more weapon types. Names autocomplete from your past games.';w.appendChild(h)}
+}
+function refresh(){
+  $('#f-modeOther').classList.toggle('hide',f.mode!=='Other');
+  $('#place-wrap').classList.toggle('hide',!(f.mode==='Cashout'||f.mode==='Ranked'));
+  $('#rs-wrap').classList.toggle('hide',f.mode!=='Ranked');
+  $('#stage-wrap').classList.toggle('hide',f.mode!=='Ranked');
+  $('#party-wrap').classList.toggle('hide',!f.squad.includes('Party'));
+  $('#f-specOther').classList.toggle('hide',!f.specs.includes('Other'));
+  const m=$('#f-map').value; $('#f-mapOther').classList.toggle('hide',!(m==='LTM'||m==='Other')); $('#f-mapOther').placeholder=m==='LTM'?'Which LTM?':'Which map?';
+  // K/D auto
+  const k=parseFloat(f.kills), d=parseFloat(f.deaths);
+  if(!f.kdManual){
+    const auto=!isNaN(k)&&!isNaN(d)?(d>0?(k/d).toFixed(2):k.toFixed(2)):'';
+    f.kd=auto; $('#f-kd').value=auto; $('#kd-stat').classList.toggle('auto',auto!=='');
+  } else $('#kd-stat').classList.remove('auto');
+  paintKD();
+}
+function setSign(s){rsSign=s;$('#rs-plus').classList.toggle('on',s===1);$('#rs-minus').classList.toggle('on',s===-1)}
+$('#rs-plus').onclick=()=>{setSign(rsSign===1?null:1);if(rsSign===1){f.result='W';mountResult()}};
+$('#rs-minus').onclick=()=>{setSign(rsSign===-1?null:-1);if(rsSign===-1){f.result='L';mountResult()}};
+$('#f-ts').oninput=e=>f.ts=new Date(e.target.value).getTime();
+$('#f-k').oninput=e=>{f.kills=e.target.value;refresh()};
+$('#f-d').oninput=e=>{f.deaths=e.target.value;refresh()};
+$('#f-kd').oninput=e=>{f.kd=e.target.value;f.kdManual=e.target.value!=='';if(!f.kdManual)refresh();else{$('#kd-stat').classList.remove('auto');paintKD()}};
+$('#f-teammate').onchange=e=>f.teammate=e.target.value||null;
+$('#f-map').onchange=e=>{f.map=e.target.value;refresh()};
+['modeOther','specOther','mapOther','notes'].forEach(k=>$('#f-'+k).oninput=e=>f[k]=e.target.value);
+
+$('#save').onclick=()=>{
+  if(!f.mode) return toast('Pick a game mode');
+  if(f.kd===''&&f.kills==='') return toast('Enter kills/deaths or a K/D');
+  const rsv=$('#f-rs').value;
+  if(f.mode==='Ranked'&&rsv!==''&&!rsSign) return toast('Pick + or − for RS');
+  const e={id:editingId??nextId++,ts:f.ts,mode:f.mode,modeOther:f.modeOther,result:f.result,
+    place:(f.mode==='Cashout'||f.mode==='Ranked')?f.place:null,stage:f.mode==='Ranked'?f.stage:null,rs:f.mode==='Ranked'&&rsv!==''?rsSign*parseInt(rsv):null,
+    kills:f.kills===''?null:+f.kills,deaths:f.deaths===''?null:+f.deaths,kd:f.kd===''?null:+(+f.kd).toFixed(2),kdManual:f.kdManual,
+    squad:f.squad.length?[...f.squad]:['Solo'],partySize:f.squad.includes('Party')?f.partySize:null,teammate:f.squad.includes('Party')?f.teammate:null,
+    med:f.med,mental:f.mental,lag:f.lag||'None',builds:[...f.builds],weapons:Object.fromEntries(Object.entries(f.weapons).filter(([,v])=>v!==undefined)),
+    specs:[...f.specs],specOther:f.specOther,map:f.map,mapOther:f.mapOther,notes:f.notes};
+  if(editingId){data=data.map(x=>x.id===editingId?e:x);toast('Entry updated')} else {data.push(e);toast('Game saved ✓')}
+  const carry=editingId?null:f; editingId=null; $('#editbar').classList.add('hide'); $('#save').textContent='Save game';
+  f=blankForm(carry); mountEntry(); showTab('record');
+};
+$('#cancel-edit').onclick=()=>{editingId=null;$('#editbar').classList.add('hide');$('#save').textContent='Save game';f=blankForm();mountEntry()};
+function editEntry(id){
+  const e=data.find(x=>x.id===id); editingId=id;
+  f={...e,rs:e.rs??'',kills:e.kills??'',deaths:e.deaths??'',kd:e.kd??'',weapons:{...e.weapons},builds:[...e.builds],specs:[...e.specs],squad:[...e.squad]};
+  $('#editbar').classList.remove('hide'); $('#save').textContent='Update entry'; showTab('entry'); mountEntry();
+  if(f.kdManual) $('#kd-stat').classList.remove('auto');
+}
+
+/* ---------- RECORD ---------- */
+let recSort='new', openRec=null, confirmDel=null;
+document.querySelectorAll('#rec-sort button').forEach(b=>b.onclick=()=>{recSort=b.dataset.v;document.querySelectorAll('#rec-sort button').forEach(x=>x.classList.toggle('on',x===b));renderRecord()});
+function renderRecord(){
+  const list=[...data].sort((a,b)=>recSort==='new'?b.ts-a.ts:a.ts-b.ts);
+  $('#rec-count').textContent=`Record · ${list.length} games`;
+  $('#rec-list').innerHTML=list.map(e=>{
+    const w=Object.entries(e.weapons).map(([t,n])=>`${t}${n?': '+esc(n):''}`).join(', ')||'—';
+    return `<div class="rec" data-id="${e.id}">
+      <div class="r1"><span>${fmtDT(e.ts)}</span>${e.result?`<span class="badge ${e.result}">${e.result==='W'?'WIN':'LOSS'}${e.place?' · '+ord(e.place):''}</span>`:''}</div>
+      <div class="r2"><div><div class="title">${esc(modeName(e))}${e.rs!=null?` <span style="color:${e.rs>=0?'var(--win)':'var(--loss)'};font-size:14px">${e.rs>=0?'+':''}${e.rs} RS</span>`:''}</div>
+        <div style="color:var(--muted);font-size:13px">${esc(mapName(e)||'No map')} · ${e.builds.join('+')||'—'}</div></div>
+        <div class="kd"><span class="${kdTier(e.kd)}">${e.kd??'–'}</span><small>${e.kills??'–'} / ${e.deaths??'–'}</small></div></div>
+      <div class="tags"><span>${esc(squadName(e))}</span>${LAGGY.has(e.lag)?`<span class="warn">Lag: ${e.lag}</span>`:''}${e.med==='Yes'?'<span>Medicated</span>':''}${e.mental?`<span>${e.mental}</span>`:''}${isMixed(e)?'<span>■ mixed build</span>':''}</div>
+      ${openRec===e.id?`<div class="detail">
+        <div><b>Weapons:</b> ${w}</div>${e.stage?`<div><b>Ranked stage:</b> ${e.stage}</div>`:''}<div><b>Spec:</b> ${e.specs.map(s=>s==='Other'&&e.specOther?e.specOther:s).join(', ')||'—'}</div>
+        ${e.squad.includes('Party')?`<div><b>Teammates:</b> ${e.teammate||'—'}</div>`:''}<div><b>Lag:</b> ${e.lag}</div>
+        ${e.notes?`<div><b>Notes:</b> ${esc(e.notes)}</div>`:''}
+        <div class="row" style="margin-top:10px"><button class="btn sm" data-act="edit">Edit</button><button class="btn sm" data-act="del" style="${confirmDel===e.id?'background:var(--loss);border-color:var(--loss);color:#fff':''}">${confirmDel===e.id?'Tap again to delete':'Delete'}</button></div>
+      </div>`:''}
+    </div>`}).join('');
+  document.querySelectorAll('.rec').forEach(el=>el.onclick=ev=>{
+    const id=+el.dataset.id, act=ev.target.dataset?.act;
+    if(act==='edit') return editEntry(id);
+    if(act==='del'){ if(confirmDel===id){data=data.filter(x=>x.id!==id);confirmDel=null;toast('Deleted')} else confirmDel=id; return renderRecord()}
+    openRec=openRec===id?null:id; confirmDel=null; renderRecord();
+  });
+}
+const COLS=[['Date',e=>new Date(e.ts).toISOString()],['Mode',modeName],['Result',e=>e.result==='W'?'Win':e.result==='L'?'Loss':''],['Placement',e=>ord(e.place)],['Ranked stage',e=>e.stage??''],['RS',e=>e.rs??''],
+  ['Kills',e=>e.kills??''],['Deaths',e=>e.deaths??''],['K/D',e=>e.kd??''],['Squad',e=>e.squad.join(' + ')],['Party size',e=>e.partySize??''],['Teammate skill',e=>e.teammate??''],
+  ['Medicated',e=>e.med??''],['Mental',e=>e.mental??''],['Lag',e=>e.lag],['Build',e=>e.builds.join('+')],...WTYPES.map(t=>[t,e=>e.weapons[t]??'']),
+  ['Spec',e=>e.specs.join('+')],['Map',mapName],['Notes',e=>e.notes]];
+function download(name,content,type){const a=document.createElement('a');a.href=typeof content==='string'&&content.startsWith('data:')?content:URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click()}
+const csvCell=v=>/[",\n]/.test(String(v))?`"${String(v).replace(/"/g,'""')}"`:v;
+$('#exp-csv').onclick=()=>download('skill-issue-record.csv',[COLS.map(c=>c[0]).join(','),...[...data].sort((a,b)=>a.ts-b.ts).map(e=>COLS.map(c=>csvCell(c[1](e))).join(','))].join('\n'),'text/csv');
+$('#exp-xlsx').onclick=()=>toast('.xlsx export comes in the real app');
+
+/* ---------- GRAPH ---------- */
+const METRICS=[{v:'kd',l:'K/D'},{v:'kills',l:'Kills'},{v:'deaths',l:'Deaths'},{v:'win',l:'Win %'},{v:'place',l:'Placement'},{v:'rs',l:'RS'}];
+const RANGES=[{v:7,l:'7D'},{v:30,l:'30D'},{v:90,l:'90D'},{v:0,l:'All'}];
+const VIEWS=[{v:'game',l:'Per game'},{v:'day',l:'Daily'},{v:'week',l:'Weekly'}];
+let metric='kd', range=0, view='game', chart;
+const FF=[
+  {k:'mode',l:'Game mode',o:()=>MODES,g:e=>[e.mode]},
+  {k:'result',l:'Result',note:'Ranked uses RS +/−',o:()=>['Win','Loss'],g:e=>[winOf(e)==='W'?'Win':winOf(e)==='L'?'Loss':null]},
+  {k:'stage',l:'Ranked stage',o:()=>STAGES,g:e=>[e.stage]},
+  {k:'build',l:'Build',o:()=>BUILDS,g:e=>e.builds},
+  {k:'weapon',l:'Weapon type',o:()=>WTYPES,g:e=>Object.keys(e.weapons)},
+  {k:'spec',l:'Spec',o:()=>SPECS,g:e=>e.specs},
+  {k:'map',l:'Map',o:()=>[...MAPS,'LTM','Other'],g:e=>[e.map]},
+  {k:'squad',l:'Party, Solo, or MommaGerbil',note:'Party = any game with Party, MommaGerbil, or a named friend',o:()=>['Solo','Party',...friends],g:e=>isSolo(e)?['Solo']:['Party',...e.squad.filter(x=>x!=='Party')]},
+  {k:'partySize',l:'Party size',note:'party games only',o:()=>['2','3','4','5','6','7','8','9','10'],g:e=>[String(e.partySize)]},
+  {k:'teammate',l:'Teammate skill',note:'party games only',o:()=>SKILL,g:e=>[e.teammate]},
+  {k:'lag',l:'Lag',o:()=>['Lag','No lag'],g:e=>[LAGGY.has(e.lag)?'Lag':'No lag']},
+  {k:'med',l:'Medicated',o:()=>['Yes','No'],g:e=>[e.med]},
+  {k:'mental',l:'Mental + Physical',o:()=>MENTAL,g:e=>[e.mental]},
+];
+const L=(name,color,filters={})=>({id:Math.random().toString(36).slice(2),name,color,hidden:false,filters});
+let presets=[
+  {name:'Everything',lines:[L('All games',COLORS[0])]},
+  {name:'Medium vs Heavy',lines:[L('Medium',COLORS[1],{build:['Medium']}),L('Heavy',COLORS[0],{build:['Heavy']})]},
+  {name:'Weapon compare',lines:[L('Medium + Auto',COLORS[1],{build:['Medium'],weapon:['Automatic']}),L('Medium + Poke',COLORS[2],{build:['Medium'],weapon:['Poke']}),L('Heavy Kyoto/Seoul Ranked',COLORS[0],{build:['Heavy'],map:['Kyoto','Seoul'],mode:['Ranked']})]},
+  {name:'Solo vs MommaGerbil vs Party',lines:[L('Solo',COLORS[4],{squad:['Solo']}),L('MommaGerbil',COLORS[6],{squad:['MommaGerbil']}),L('Party',COLORS[2],{squad:['Party']})]},
+];
+let lines=presets[0].lines.map(x=>({...x,filters:{...x.filters}}));
+const matches=(e,fl)=>FF.every(ff=>{const s=fl[ff.k];return !s||!s.length||ff.g(e).some(v=>s.includes(v))});
+const summary=fl=>{const p=FF.filter(ff=>fl[ff.k]?.length).map(ff=>fl[ff.k].join(' or '));return p.length?p.join(' · '):'All games'};
+
+function seg(el,opts,get,set){el.innerHTML=opts.map(o=>`<button data-v="${o.v}" class="${get()==o.v?'on':''}">${o.l}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>{set(opts.find(o=>String(o.v)===b.dataset.v).v);seg(el,opts,get,set);drawChart()})}
+
+function inRange(e){return !range||e.ts>=Date.now()-range*864e5}
+function metricOf(e){return {kd:e.kd,kills:e.kills,deaths:e.deaths,place:e.place}[metric]}
+function series(line){
+  const games=data.filter(e=>inRange(e)&&matches(e,line.filters)).sort((a,b)=>a.ts-b.ts);
+  if(view==='game'){
+    let w=0,n=0,rs=0;
+    return games.map(e=>{let y;
+      if(metric==='win'){ const r=winOf(e); if(!r) return null; n++; if(r==='W') w++; y=+(w/n*100).toFixed(1); }
+      else if(metric==='rs'){ if(e.rs==null) return null; rs+=e.rs; y=rs; }
+      else y=metricOf(e);
+      return y==null?null:{x:e.ts,y,games:[e]};
+    }).filter(Boolean);
+  }
+  const key=ts=>{const d=new Date(ts);d.setHours(0,0,0,0);if(view==='week'){d.setDate(d.getDate()-((d.getDay()+6)%7))}return d.getTime()};
+  const b=new Map(); games.forEach(e=>{const k=key(e.ts);if(!b.has(k))b.set(k,[]);b.get(k).push(e)});
+  let rs=0;
+  return [...b.entries()].map(([x,g])=>{let y;
+    if(metric==='win'){const d=g.filter(winOf);y=d.length?+(d.filter(e=>winOf(e)==='W').length/d.length*100).toFixed(1):null}
+    else if(metric==='rs'){const r=g.filter(e=>e.rs!=null);if(!r.length)return null;rs+=r.reduce((s,e)=>s+e.rs,0);y=rs}
+    else{const v=g.map(metricOf).filter(v=>v!=null);y=v.length?+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(2):null}
+    return y==null?null:{x,y,games:g};
+  }).filter(Boolean);
+}
+const NOTES={kd:'',kills:'',deaths:'',win:'Ranked: RS gained = win, RS lost = loss',place:'Cashout & Ranked only · 5th/6th = 5.5, 7th/8th = 7.5',rs:'Running RS total · Ranked only'};
+
+function drawChart(){
+  $('#metric-note').textContent=NOTES[metric];
+  const ds=lines.filter(l=>!l.hidden).map(l=>({label:l.name,data:series(l),borderColor:l.color,backgroundColor:l.color,borderWidth:2,tension:.25,
+    pointStyle:c=>c.raw&&view==='game'&&isMixed(c.raw.games[0])?'rect':'circle',
+    pointRadius:c=>c.raw&&view==='game'&&isMixed(c.raw.games[0])?4.5:3,pointHoverRadius:7}));
+  if(chart) chart.destroy();
+  chart=new Chart($('#chart'),{type:'line',data:{datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:250},
+    interaction:{mode:'nearest',intersect:false,axis:'xy'},
+    scales:{
+      x:{type:'linear',grid:{color:'#1f222a'},ticks:{color:'#8a90a0',maxTicksLimit:5,callback:v=>fmtDate(v)},
+        title:{display:true,color:'#8a90a0',font:{weight:'600'},text:{game:'Date (one point per game)',day:'Date (daily average)',week:'Week'}[view]}},
+      y:{grid:{color:'#1f222a'},ticks:{color:'#8a90a0'},reverse:metric==='place',...(metric==='win'?{min:0,max:100}:{}),...(metric==='place'?{min:1,max:8}:{}),
+        title:{display:true,color:'#8a90a0',font:{weight:'600'},text:{kd:'K/D',kills:'Kills',deaths:'Deaths',win:'Win rate (%)',place:'Placement (1st at top)',rs:'RS (running total)'}[metric]}}
+    },
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2129',borderColor:'#2a2e39',borderWidth:1,padding:10,
+      callbacks:{
+        title:it=>view==='game'?fmtDT(it[0].raw.x):(view==='week'?'Week of ':'')+fmtDate(it[0].raw.x),
+        label:c=>` ${c.dataset.label}: ${c.raw.y}${metric==='win'?'%':''}`,
+        afterLabel:c=>{const g=c.raw.games;
+          if(view!=='game'){const lag=g.filter(e=>LAGGY.has(e.lag)).length, sq=g.filter(e=>!isSolo(e)).length;
+            return [`   ${g.length} game${g.length>1?'s':''}`,lag?`   ⚠ ${lag} with lag`:null,sq?`   👥 ${sq} partied / with a friend`:null].filter(Boolean)}
+          const e=g[0];
+          return [`   ${modeName(e)} · ${mapName(e)||'—'} · ${e.builds.join('+')}${isMixed(e)?' (mixed)':''}`,
+            LAGGY.has(e.lag)?`   ⚠ Lag: ${e.lag}`:null,
+            e.stage?`   ${ord(e.place)} · ${e.stage}${e.rs!=null?` · ${e.rs>0?'+':''}${e.rs} RS`:''}`:null,
+            !isSolo(e)?`   👥 ${squadName(e)}${e.teammate?' · '+e.teammate:''}`:null].filter(Boolean)}
+      }}}
+  }});
+  renderLines();
+}
+function renderLines(){
+  const eye='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const eyeOff='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.9 17.9A10 10 0 0 1 12 20c-7 0-11-8-11-8a18 18 0 0 1 5-5.9M9.9 4.2A9 9 0 0 1 12 4c7 0 11 8 11 8a18 18 0 0 1-2.2 3.2M1 1l22 22"/></svg>';
+  const pen='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+  const bin='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>';
+  $('#g-lines').innerHTML=lines.map(l=>{const n=data.filter(e=>inRange(e)&&matches(e,l.filters)).length;
+    return `<div class="ln ${l.hidden?'off':''}" data-id="${l.id}"><span class="dot" style="background:${l.color}"></span>
+    <div class="meta"><div class="name">${esc(l.name)} <span style="color:var(--muted);font-weight:500;font-size:12px">· ${n} games</span></div><div class="sum">${esc(summary(l.filters))}</div></div>
+    <button class="ib" data-a="hide" title="Show/hide">${l.hidden?eyeOff:eye}</button><button class="ib" data-a="edit" title="Edit">${pen}</button><button class="ib" data-a="del" title="Delete">${bin}</button></div>`}).join('')||'<div class="hint" style="margin:0 2px 8px">No lines. Add one below.</div>';
+  document.querySelectorAll('.ln').forEach(el=>el.querySelectorAll('.ib').forEach(b=>b.onclick=()=>{
+    const l=lines.find(x=>x.id===el.dataset.id);
+    if(b.dataset.a==='hide'){l.hidden=!l.hidden;drawChart()}
+    if(b.dataset.a==='del'){lines=lines.filter(x=>x!==l);drawChart()}
+    if(b.dataset.a==='edit') openEditor(l);
+  }));
+  $('#g-preset').innerHTML='<option value="">Load preset…</option>'+presets.map((p,i)=>`<option value="${i}">${esc(p.name)}</option>`).join('');
+}
+$('#g-preset').onchange=e=>{if(e.target.value==='')return;const p=presets[+e.target.value];lines=p.lines.map(x=>({...x,id:Math.random().toString(36).slice(2),filters:JSON.parse(JSON.stringify(x.filters))}));drawChart();toast(`Loaded “${p.name}”`)};
+$('#g-savepreset').onclick=()=>{$('#presetsave').classList.toggle('hide');$('#preset-name').focus()};
+$('#preset-ok').onclick=()=>{const n=$('#preset-name').value.trim();if(!n)return;presets.push({name:n,lines:JSON.parse(JSON.stringify(lines))});$('#preset-name').value='';$('#presetsave').classList.add('hide');renderLines();toast(`Preset “${n}” saved`)};
+$('#g-add').onclick=()=>{const l=L(`Line ${lines.length+1}`,COLORS[lines.length%COLORS.length]);openEditor(l,true)};
+$('#g-png').onclick=()=>{
+  // paint dark bg behind transparent canvas
+  const c=$('#chart'), o=document.createElement('canvas'); o.width=c.width; o.height=c.height; const x=o.getContext('2d'); x.fillStyle='#16181f'; x.fillRect(0,0,o.width,o.height); x.drawImage(c,0,0);
+  download('skill-issue-graph.png',o.toDataURL('image/png'));
+};
+$('#g-csv').onclick=()=>{
+  const rows=['Line,Date,'+METRICS.find(m=>m.v===metric).l+',Games'];
+  lines.filter(l=>!l.hidden).forEach(l=>series(l).forEach(p=>rows.push([csvCell(l.name),new Date(p.x).toISOString(),p.y,p.games.length].join(','))));
+  download('skill-issue-graph-data.csv',rows.join('\n'),'text/csv');
+};
+
+/* line editor sheet */
+function openEditor(line,isNew){
+  const draft=JSON.parse(JSON.stringify(line));
+  const sh=$('#sheet');
+  const render=()=>{
+    const n=data.filter(e=>inRange(e)&&matches(e,draft.filters)).length;
+    sh.innerHTML=`<div class="grab"></div>
+      <div class="sheethead"><button class="btn" id="ed-cancel">Cancel</button><b>${isNew?'New line':'Edit line'}</b><button class="btn primary" id="ed-done">Done</button></div>
+      <div class="card"><div class="lbl">Name</div><input id="ed-name" class="txt" value="${esc(draft.name)}">
+        <div class="sub lbl">Color</div><div class="swatches">${COLORS.map(c=>`<span class="sw ${c===draft.color?'on':''}" data-c="${c}" style="background:${c}"></span>`).join('')}</div></div>
+      <div class="row" style="justify-content:space-between;margin:6px 2px"><span class="hint" style="margin:0">Matches <b style="color:var(--text)">${n}</b> games. Blank field = all.</span><button class="btn sm" id="ed-clear">Clear filters</button></div>
+      ${FF.map(ff=>`<div class="fsec"><div class="sublbl"><span>${ff.l}${ff.note?` <span style="opacity:.7">(${ff.note})</span>`:''}</span><em>${draft.filters[ff.k]?.length?draft.filters[ff.k].length+' selected':'all'}</em></div><div class="chips" data-k="${ff.k}"></div></div>`).join('')}`;
+    FF.forEach(ff=>chips(sh.querySelector(`[data-k="${ff.k}"]`),ff.o(),()=>draft.filters[ff.k]||[],v=>{draft.filters[ff.k]=v;const y=sh.scrollTop;draft.name=$('#ed-name').value;render();sh.scrollTop=y},true));
+    sh.querySelectorAll('.sw').forEach(s=>s.onclick=()=>{draft.color=s.dataset.c;draft.name=$('#ed-name').value;const y=sh.scrollTop;render();sh.scrollTop=y});
+    $('#ed-clear').onclick=()=>{draft.filters={};draft.name=$('#ed-name').value;render()};
+    $('#ed-cancel').onclick=close;
+    $('#ed-done').onclick=()=>{draft.name=$('#ed-name').value||'Untitled';if(isNew)lines.push(draft);else Object.assign(line,draft);close();drawChart()};
+  };
+  const close=()=>{sh.classList.remove('open');$('#scrim').classList.remove('open')};
+  $('#scrim').onclick=close;
+  render(); sh.classList.add('open'); $('#scrim').classList.add('open'); sh.scrollTop=0;
+}
+function renderGraph(){
+  seg($('#g-metric'),METRICS,()=>metric,v=>metric=v);
+  seg($('#g-range'),RANGES,()=>range,v=>range=v);
+  seg($('#g-view'),VIEWS,()=>view,v=>view=v);
+  drawChart();
+}
+
+mountEntry();
+showTab('entry');
+</script>
+</body>
+</html>

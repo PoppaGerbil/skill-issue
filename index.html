@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Skill Issue</title>
+<meta name="description" content="Log and graph your THE FINALS games.">
+<meta name="theme-color" content="#0c0d11">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Skill Issue">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/app.css">
+<script src="vendor/chart.umd.min.js" defer></script>
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">SKILL<span>ISSUE</span></div>
+    <button id="settings" class="gear" aria-label="Settings and backup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <!-- ENTRY -->
+  <section id="tab-entry" class="tab active">
+    <div id="editbar" class="editbar hide"><span>Editing an entry</span><button id="cancel-edit">Cancel</button></div>
+
+    <div class="card">
+      <div class="lbl">When <span class="lbl-note">auto · tap to change</span></div>
+      <input type="datetime-local" id="f-ts" class="txt">
+    </div>
+
+    <div class="card">
+      <div class="lbl">Game mode</div>
+      <div class="chips" id="c-mode"></div>
+      <input id="f-modeOther" class="txt sub hide" placeholder="Which mode?">
+    </div>
+
+    <div class="card">
+      <div class="lbl">Result</div>
+      <div class="chips big" id="c-result"></div>
+      <div id="place-wrap" class="sub hide">
+        <div class="sublbl">Placement</div>
+        <div class="chips big grid3" id="c-place"></div>
+      </div>
+      <div id="stage-wrap" class="sub hide">
+        <div class="sublbl">Ranked stage</div>
+        <div class="chips" id="c-stage"></div>
+      </div>
+      <div id="rs-wrap" class="sub hide">
+        <div class="sublbl">RS gained / lost <span style="opacity:.7">· graphed as win if +, loss if −</span></div>
+        <div class="rs"><button type="button" id="rs-plus" class="pos" aria-label="RS gained">+</button><button type="button" id="rs-minus" class="neg" aria-label="RS lost">−</button><input id="f-rs" class="txt" inputmode="numeric" pattern="[0-9]*" placeholder="0" autocomplete="off"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Stats</div>
+      <div class="stats">
+        <div class="stat"><label for="f-k">Kills</label><input id="f-k" inputmode="numeric" pattern="[0-9]*" placeholder="–" autocomplete="off"></div>
+        <div class="stat"><label for="f-d">Deaths</label><input id="f-d" inputmode="numeric" pattern="[0-9]*" placeholder="–" autocomplete="off"></div>
+        <div class="stat" id="kd-stat"><label for="f-kd">K/D</label><span class="tag">AUTO</span><input id="f-kd" inputmode="decimal" placeholder="–" autocomplete="off"></div>
+      </div>
+      <div class="hint">K/D fills in from kills ÷ deaths. You can also type K/D yourself and leave kills and deaths blank.</div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Party, Solo, or MommaGerbil?</div>
+      <div class="chips" id="c-squad"></div>
+      <div id="friend-add" class="inline hide"><input id="friend-name" class="txt" placeholder="Name" autocomplete="off"><button class="btn primary" id="friend-ok">Add</button></div>
+      <div id="party-wrap" class="hide">
+        <div class="sub sublbl">Party size</div>
+        <div class="chips" id="c-psize"></div>
+        <div class="sub sublbl">Teammate skill level</div>
+        <select id="f-teammate" class="txt"></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Medicated?</div>
+      <div class="chips big" id="c-med"></div>
+      <div class="sub lbl">Mental + Physical</div>
+      <div class="chips" id="c-mental"></div>
+      <div class="sub lbl">Lag?</div>
+      <div class="chips" id="c-lag"></div>
+    </div>
+
+    <div class="card">
+      <div class="lbl">Loadout</div>
+      <div class="chips" id="c-saved"></div>
+      <div id="saveload" class="inline hide"><input id="saveload-name" class="txt" placeholder="Name this loadout, e.g. Heavy Goo" autocomplete="off"><button class="btn primary" id="saveload-ok">Save</button></div>
+      <div class="sub sublbl">Build</div>
+      <div class="chips" id="c-build"></div>
+      <div class="sub sublbl">Weapon</div>
+      <div id="weapons"></div>
+      <div class="sub sublbl">Spec</div>
+      <div class="chips" id="c-spec"></div>
+      <input id="f-specOther" class="txt sub hide" placeholder="Other spec">
+    </div>
+
+    <div class="card">
+      <div class="lbl">Map</div>
+      <select id="f-map" class="txt"></select>
+      <input id="f-mapOther" class="txt sub hide" placeholder="">
+    </div>
+
+    <div class="card">
+      <div class="lbl">Other</div>
+      <textarea id="f-notes" class="txt" placeholder="Random notes…"></textarea>
+    </div>
+
+    <button class="save" id="save">Save game</button>
+    <button class="linkbtn" id="clear-form">Clear form</button>
+  </section>
+
+  <!-- RECORD -->
+  <section id="tab-record" class="tab">
+    <h2 id="rec-count">Record</h2>
+    <div class="toolbar">
+      <div class="seg" id="rec-sort" style="flex:none"><button data-v="new" class="on">Newest</button><button data-v="old">Oldest</button></div>
+      <div class="row"><button class="btn sm" id="exp-xlsx">Export .xlsx</button><button class="btn sm" id="exp-csv">.csv</button></div>
+    </div>
+    <div id="rec-list"></div>
+  </section>
+
+  <!-- GRAPH -->
+  <section id="tab-graph" class="tab">
+    <h2>Graph</h2>
+    <div class="gctl">
+      <div class="seg" id="g-metric"></div>
+      <div class="seg" id="g-range"></div>
+      <div class="seg" id="g-view"></div>
+    </div>
+    <div class="card">
+      <div class="chartwrap"><canvas id="chart"></canvas><div id="chart-empty" class="chart-empty hide"></div></div>
+      <div class="legendnote"><span><i class="c"></i>single build</span><span><i></i>= mixed build</span><span id="metric-note"></span></div>
+    </div>
+    <div class="row" style="justify-content:space-between;margin:14px 2px 8px">
+      <h2 style="margin:0">Lines</h2>
+      <div class="row"><select id="g-preset" class="txt preset"></select><button class="btn sm" id="g-savepreset">Save preset</button></div>
+    </div>
+    <div id="presetsave" class="inline hide" style="margin-bottom:8px"><input id="preset-name" class="txt" placeholder="Preset name, e.g. Medium weapons compare" autocomplete="off"><button class="btn primary" id="preset-ok">Save</button></div>
+    <div id="g-lines"></div>
+    <button class="add" id="g-add">+ Add line</button>
+    <div class="row" style="margin:14px 0 20px;justify-content:flex-end"><button class="btn sm" id="g-png">Export PNG</button><button class="btn sm" id="g-csv">Export data .csv</button></div>
+  </section>
+
+  <nav class="bottom">
+    <button data-tab="entry" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Entry</button>
+    <button data-tab="record"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Record</button>
+    <button data-tab="graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 4 3 5-7"/></svg>Graph</button>
+  </nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+</div>
+</body>
+</html>
