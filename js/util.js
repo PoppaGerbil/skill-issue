@@ -42,6 +42,10 @@ export const fmtDT = ts => new Date(ts).toLocaleString(undefined, { month: 'shor
 
 export const placeLabel = v => PLACES.find(p => p.v === v)?.l ?? '';
 export const isMixed = e => e.builds.length > 1;
+// Weapons are stored as { Automatic: ['ShAK-50', 'Lewis Gun'], Melee: [] }. Older data used one string per type.
+export const normalizeWeapons = w => Object.fromEntries(Object.entries(w || {}).map(([t, v]) => [t, Array.isArray(v) ? v : v ? [v] : []]));
+export const copyWeapons = w => Object.fromEntries(Object.entries(normalizeWeapons(w)).map(([t, v]) => [t, [...v]]));
+export const weaponList = e => Object.values(e.weapons).flat().filter(Boolean);
 export const isLaggy = e => LAGGY.has(e.lag);
 export const modeName = e => e.mode === 'Other' ? (e.modeOther || 'Other') : e.mode;
 export const mapName = e => (e.map === 'LTM' || e.map === 'Other') && e.mapOther ? `${e.map}: ${e.mapOther}` : e.map;

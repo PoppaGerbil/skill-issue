@@ -96,7 +96,7 @@ function drawChart() {
               return [
                 `   ${modeName(e)} · ${mapName(e) || '—'} · ${e.builds.join('+') || '—'}${isMixed(e) ? ' (mixed)' : ''}`,
                 isLaggy(e) ? `   ⚠ Lag: ${e.lag}` : null,
-                e.stage ? `   ${placeLabel(e.place)} · ${e.stage}${e.rs != null ? ` · ${e.rs > 0 ? '+' : ''}${e.rs} RS` : ''}` : null,
+                e.stage ? `   ${placeLabel(e.place)} · ${e.stage}${e.rs != null ? ` · ${e.rs > 0 ? '+' : ''}${e.rs} RS` : ''}${e.rsTotal != null ? ` → ${e.rsTotal.toLocaleString()}` : ''}` : null,
                 !isSolo(e) ? `   👥 ${squadName(e)}${e.teammate ? ' · ' + e.teammate : ''}` : null,
               ].filter(Boolean);
             },

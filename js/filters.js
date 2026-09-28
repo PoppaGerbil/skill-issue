@@ -2,7 +2,7 @@
 // Within a field options are OR'd, across fields they're AND'd. A blank field means "all".
 import { MODES, MAPS, MENTAL, SKILL, BUILDS, WTYPES, SPECS, STAGES } from './constants.js';
 import { state } from './store.js';
-import { isLaggy, isSolo, winOf, chips } from './util.js';
+import { isLaggy, isSolo, winOf, chips, weaponList } from './util.js';
 
 export const TOD = ['Morning (5am–12pm)', 'Afternoon (12–5pm)', 'Evening (5–10pm)', 'Late night (10pm–5am)'];
 export const todOf = e => {
@@ -26,7 +26,7 @@ export function sessionPos(e) {
 }
 export const sposOf = e => { const p = sessionPos(e); return p <= 3 ? SPOS[0] : p <= 6 ? SPOS[1] : p <= 9 ? SPOS[2] : SPOS[3]; };
 
-export const weaponNames = () => [...new Set(state.entries.flatMap(e => Object.values(e.weapons)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+export const weaponNames = () => [...new Set(state.entries.flatMap(weaponList))].sort((a, b) => a.localeCompare(b));
 
 export const FF = [
   { k: 'mode', l: 'Game mode', o: () => MODES, g: e => [e.mode] },
@@ -34,7 +34,7 @@ export const FF = [
   { k: 'stage', l: 'Ranked stage', o: () => STAGES, g: e => [e.stage] },
   { k: 'build', l: 'Build', o: () => BUILDS, g: e => e.builds },
   { k: 'weapon', l: 'Weapon type', o: () => WTYPES, g: e => Object.keys(e.weapons) },
-  { k: 'wname', l: 'Weapon name', o: weaponNames, g: e => Object.values(e.weapons).filter(Boolean) },
+  { k: 'wname', l: 'Weapon name', o: weaponNames, g: weaponList },
   { k: 'spec', l: 'Spec', o: () => SPECS, g: e => e.specs },
   { k: 'map', l: 'Map', o: () => [...MAPS, 'LTM', 'Other'], g: e => [e.map] },
   { k: 'squad', l: 'Party, Solo, or friend', note: 'Party = any game with Party or a named friend', o: () => ['Solo', 'Party', ...state.friends], g: e => isSolo(e) ? ['Solo'] : ['Party', ...e.squad.filter(x => x !== 'Party')] },

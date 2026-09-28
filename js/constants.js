@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.2.0';
 
 export const MODES = ['Pointbreak', 'Cashout', 'Ranked', 'Other'];
 export const MAPS = ['Bernal', 'Fangwai', 'Fortune', 'Kyoto', 'Monaco', 'Nozomi', 'PEACE Center', 'Seoul', 'Skyway', 'Starlight', 'Sys', 'Vegas', 'Vegas Stadium'];

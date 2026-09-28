@@ -9,7 +9,7 @@ export function demoData() {
   const POOL = {
     Light: { w: { Automatic: ['M11', 'XP-54'], Poke: ['LH1'], Melee: ['Dagger'] }, s: ['Invis', 'Grapple', 'Dash'] },
     Medium: { w: { Automatic: ['FCAR', 'AKM'], Burst: ['FAMAS'], Poke: ['Pike-556'] }, s: ['HealBeam', 'Turret', 'Demat'] },
-    Heavy: { w: { Automatic: ['M60', 'Lewis Gun'], Poke: ['KS-23'], Melee: ['Sledgehammer'], Sustain: ['Flamethrower'] }, s: ['C+S', 'GooGun', 'Shield', 'Winch'] },
+    Heavy: { w: { Automatic: ['M60', 'Lewis Gun', 'ShAK-50'], Poke: ['KS-23'], Melee: ['Sledgehammer'], Sustain: ['Flamethrower'] }, s: ['C+S', 'GooGun', 'Shield', 'Winch'] },
   };
   const entries = [], sessions = [];
   const now = Date.now(), DAY = 864e5;
@@ -26,7 +26,7 @@ export function demoData() {
       const builds = [primary];
       if (R() < .12) builds.push(pick(BUILDS.filter(b => b !== primary)));
       const weapons = {}, specs = [];
-      builds.forEach(b => { const ty = pick(Object.keys(POOL[b].w)); weapons[ty] = pick(POOL[b].w[ty]); const s = pick(POOL[b].s); if (!specs.includes(s)) specs.push(s); });
+      builds.forEach(b => { const ty = pick(Object.keys(POOL[b].w)); weapons[ty] = [pick(POOL[b].w[ty])]; if (R() < .1 && POOL[b].w[ty].length > 1) weapons[ty] = [...POOL[b].w[ty]]; const s = pick(POOL[b].s); if (!specs.includes(s)) specs.push(s); });
       const mental = R() < .5 ? 'Locked' : R() < .5 ? 'Crashing Out' : 'Distracted/Tired/Over It';
       const lag = R() < .6 ? 'None' : R() < .3 ? 'Great Connection' : pick(['Some', 'A lot', 'Unplayable', 'Glitch/Bug']);
       const r = R(), squad = r < .45 ? ['Solo'] : r < .7 ? [FIXED_FRIEND] : r < .85 ? ['Party'] : ['Party', FIXED_FRIEND];

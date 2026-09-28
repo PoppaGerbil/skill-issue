@@ -1,10 +1,10 @@
 // Offline support: the whole app is cached on first load and served from cache after that.
 // Bump VERSION whenever any file changes so phones pick up the new version.
-const VERSION = 'skill-issue-v1.1.0';
+const VERSION = 'skill-issue-v1.2.0';
 const FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/main.js', 'js/constants.js', 'js/util.js', 'js/store.js', 'js/nav.js', 'js/files.js',
-  'js/entry.js', 'js/record.js', 'js/graph.js', 'js/settings.js', 'js/filters.js', 'js/stats.js', 'js/demo.js',
+  'js/entry.js', 'js/record.js', 'js/graph.js', 'js/settings.js', 'js/filters.js', 'js/stats.js', 'js/demo.js', 'js/rs.js',
   'vendor/chart.umd.min.js', 'vendor/xlsx.full.min.js', 'vendor/html2canvas.min.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png',
 ];

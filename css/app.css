@@ -201,3 +201,13 @@ table.bt td:last-child, table.bt th:last-child { width: 34px; padding-right: 0; 
 .ps b { white-space: nowrap; }
 body.demo header.top::after { content: 'DEMO · NOT SAVED'; position: absolute; right: 50px; font-size: 10px; letter-spacing: .12em; color: var(--accent2); border: 1px solid #5b4715; padding: 3px 7px; border-radius: 99px; }
 @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+
+/* multiple weapon names per type */
+.wrow { align-items: start; }
+.wnames { display: grid; gap: 6px; }
+.wname { display: flex; gap: 6px; }
+.wname .txt { flex: 1; min-width: 0; }
+.wx { flex: none; width: 36px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; color: var(--muted); }
+.wmore { justify-self: start; background: none; border: none; color: var(--muted); font-size: 13px; padding: 2px 2px 4px; text-decoration: underline; }
+
+.myrs .bigrs { font-size: 26px; font-weight: 900; line-height: 1.2; }

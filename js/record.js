@@ -7,13 +7,13 @@ import { agg } from './stats.js';
 let sort = 'new', openId = null;
 
 function card(e) {
-  const weapons = Object.entries(e.weapons).map(([t, n]) => `${t}${n ? ': ' + esc(n) : ''}`).join(', ') || '—';
+  const weapons = Object.entries(e.weapons).map(([t, n]) => `${t}${n.length ? ': ' + n.map(esc).join(' + ') : ''}`).join(', ') || '—';
   const specs = e.specs.map(s => s === 'Other' && e.specOther ? esc(e.specOther) : s).join(', ') || '—';
   return `<div class="rec" data-id="${e.id}">
     <div class="r1"><span>${fmtDT(e.ts)}</span>${e.result ? `<span class="badge ${e.result}">${e.result === 'W' ? 'WIN' : 'LOSS'}${e.place ? ' · ' + placeLabel(e.place) : ''}</span>` : ''}</div>
     <div class="r2">
       <div>
-        <div class="title">${esc(modeName(e))}${e.rs != null ? ` <span class="rsv ${e.rs >= 0 ? 'pos' : 'neg'}">${e.rs >= 0 ? '+' : ''}${e.rs} RS</span>` : ''}</div>
+        <div class="title">${esc(modeName(e))}${e.rs != null ? ` <span class="rsv ${e.rs >= 0 ? 'pos' : 'neg'}">${e.rs >= 0 ? '+' : ''}${e.rs} RS</span>` : ''}${e.rsTotal != null ? ` <span class="rsv muted">→ ${e.rsTotal.toLocaleString()}</span>` : ''}</div>
         <div class="muted">${esc(mapName(e) || 'No map')} · ${e.builds.join('+') || 'No build'}</div>
       </div>
       <div class="kd"><span class="${kdTier(e.kd)}">${e.kd ?? '–'}</span><small>${e.kills ?? '–'} / ${e.deaths ?? '–'}</small></div>

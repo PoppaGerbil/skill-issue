@@ -6,6 +6,7 @@ import { FFK, matches, summary, filterCount, filterSectionsHTML, bindFilterSecti
 import { addLine } from './graph.js';
 import { saveFile, toCsv, loadScript } from './files.js';
 import { showTab } from './nav.js';
+import { rsBefore, currentRs, setRs, fmtRs } from './rs.js';
 
 const MIN = 5; // games needed before something counts as a highlight
 const S = () => state.stats;
@@ -128,7 +129,7 @@ function highlights(games) {
   // loadout = builds + named weapons + specs
   const lo = new Map();
   games.forEach(e => {
-    const parts = [e.builds.join('+'), ...Object.entries(e.weapons).map(([t, n]) => n || t), ...e.specs.map(s => s === 'Other' && e.specOther ? e.specOther : s)].filter(Boolean);
+    const parts = [e.builds.join('+'), ...Object.entries(e.weapons).map(([t, n]) => n.length ? n.join('/') : t), ...e.specs.map(s => s === 'Other' && e.specOther ? e.specOther : s)].filter(Boolean);
     if (!parts.length) return;
     const k = parts.join(' · ');
     if (!lo.has(k)) lo.set(k, []);
@@ -176,6 +177,19 @@ function statTiles(a, extra = '') {
   </div>${extra}`;
 }
 
+function myRsHTML() {
+  const v = currentRs();
+  return `<div class="card myrs">
+    <div class="row" style="justify-content:space-between">
+      <div><div class="lbl" style="margin:0">My RS</div><div class="bigrs">${v == null ? '<span class="muted">Not set</span>' : fmtRs(v)}</div></div>
+      <button class="btn" id="rs-edit">${v == null ? 'Set RS' : 'Edit'}</button>
+    </div>
+    <div id="rs-set" class="inline hide"><input id="rs-input" class="txt" inputmode="numeric" pattern="[0-9]*" placeholder="Your RS right now" value="${v ?? ''}" autocomplete="off"><button class="btn primary" id="rs-ok">Save</button></div>
+    <div class="hint">${v == null ? 'Enter your current RS from the game. After that, every Ranked game you log moves it automatically.' : 'Moves with every Ranked game you log. Edit it if it drifts (season reset, a game you didn’t log). Set it to your RS after your latest logged game.'}</div>
+  </div>`;
+}
+const rsRange = (from, to) => { const a = rsBefore(from), b = rsBefore(to); return a == null || b == null ? '' : `${fmtRs(a)} → ${fmtRs(b)}`; };
+
 function sessionCardHTML() {
   const s = state.activeSession;
   if (!s) return `<div class="card sess"><div class="row" style="justify-content:space-between">
@@ -184,7 +198,7 @@ function sessionCardHTML() {
   const a = agg(sessionGames(s.id));
   return `<div class="card sess live">
     <div class="lbl"><span><i class="pulse"></i>Session live</span><span class="lbl-note">since ${fmtDT(s.start)} · ${dur(Date.now() - s.start)}</span></div>
-    ${statTiles(a, a.rsN ? `<div class="hint">RS gained <b class="pos">+${a.rsGain}</b> · lost <b class="neg">${a.rsLoss}</b></div>` : '')}
+    ${statTiles(a, a.rsN || state.rsAnchor ? `<div class="hint">${a.rsN ? `RS gained <b class="pos">+${a.rsGain}</b> · lost <b class="neg">${a.rsLoss}</b>` : ''}${a.rsN && state.rsAnchor ? ' · ' : ''}${state.rsAnchor ? `RS ${rsRange(s.start, Infinity)}` : ''}</div>` : '')}
     <div class="row" style="margin-top:10px"><button class="btn" id="sess-view">${S().range === 'live' ? 'Showing this session' : 'Show session stats'}</button><button class="btn" id="sess-end">End session</button></div>
   </div>`;
 }
@@ -222,7 +236,7 @@ function pastSessionsHTML() {
     const a = agg(sessionGames(s.id));
     const on = S().range === 'session:' + s.id;
     return `<div class="ps ${on ? 'on' : ''}" data-id="${s.id}">
-      <div><div class="name">${fmtDT(s.start)}</div><div class="muted">${dur(s.end - s.start)} · ${a.n} game${a.n === 1 ? '' : 's'} · ${a.wins}–${a.losses} · ${kdMain(a) ?? '–'} K/D</div></div>
+      <div><div class="name">${fmtDT(s.start)}</div><div class="muted">${state.rsAnchor ? rsRange(s.start, s.end + 1) + ' · ' : ''}${dur(s.end - s.start)} · ${a.n} game${a.n === 1 ? '' : 's'} · ${a.wins}–${a.losses} · ${kdMain(a) ?? '–'} K/D</div></div>
       <b class="${a.rsNet > 0 ? 'pos' : a.rsNet < 0 ? 'neg' : ''}">${a.rsN ? signed(a.rsNet) + ' RS' : ''}</b></div>`;
   }).join('')}`;
 }
@@ -251,6 +265,7 @@ export function renderStats() {
   const hl = highlights(games);
 
   $('#stats-root').innerHTML = `
+    ${myRsHTML()}
     ${sessionCardHTML()}
     <div class="gctl">
       <div class="seg" id="st-range">${ranges.map(r => `<button data-v="${r.v}" class="${S().range === r.v ? 'on' : ''}">${r.l}</button>`).join('')}</div>
@@ -319,6 +334,14 @@ export function renderStats() {
 
 function bind(games) {
   const root = $('#stats-root');
+  $('#rs-edit').onclick = () => { $('#rs-set').classList.toggle('hide'); $('#rs-input').focus(); };
+  $('#rs-input').oninput = e => { e.target.value = e.target.value.replace(/\D/g, ''); };
+  $('#rs-input').onkeydown = e => { if (e.key === 'Enter') $('#rs-ok').click(); };
+  $('#rs-ok').onclick = async () => {
+    const v = $('#rs-input').value;
+    if (v === '') return toast('Type your RS first');
+    await setRs(+v); toast(`RS set to ${fmtRs(+v)}`); renderStats(); renderSessionBar();
+  };
   $('#sess-start')?.addEventListener('click', startSession);
   $('#sess-view')?.addEventListener('click', () => { S().range = 'live'; save('stats'); renderStats(); });
   $('#sess-end')?.addEventListener('click', e => confirmTap(e.target, 'Tap again to end', endSession));

@@ -1,7 +1,7 @@
 // All data lives in IndexedDB on this device. Everything is loaded into `state` at startup
 // and each key is written back whenever it changes.
 import { COLORS, FIXED_FRIEND } from './constants.js';
-import { toast, uid } from './util.js';
+import { toast, uid, normalizeWeapons } from './util.js';
 
 const DB_NAME = 'skill-issue', STORE = 'kv', SCHEMA = 1;
 let dbp;
@@ -39,6 +39,7 @@ const defaults = () => ({
   stats: { range: 0, filters: {} },
   sessions: [],        // finished sessions: { id, start, end }
   activeSession: null, // { id, start } while a session is running
+  rsAnchor: null,      // { value, ts }: your rank score at a point in time (see rs.js)
 });
 
 export const KEYS = Object.keys(defaults());
@@ -50,6 +51,7 @@ export async function load() {
     if (v !== undefined) state[k] = v;
   }
   if (!state.friends.includes(FIXED_FRIEND)) state.friends.unshift(FIXED_FRIEND);
+  migrate();
   await dbSet('schema', SCHEMA);
   // Ask the browser not to evict our data under storage pressure
   navigator.storage?.persist?.().catch(() => {});
@@ -64,6 +66,12 @@ export function save(...keys) {
   return Promise.all(keys.map(k => dbSet(k, state[k]))).catch(e => toast('Couldn’t save: ' + e.message));
 }
 
+// Bring older saved data up to the current shape (runs in memory; saved on the next write)
+function migrate() {
+  state.entries.forEach(e => { e.weapons = normalizeWeapons(e.weapons); });
+  state.loadouts.forEach(l => { l.weapons = normalizeWeapons(l.weapons); });
+}
+
 export const nextId = () => state.entries.reduce((m, e) => Math.max(m, e.id), 0) + 1;
 
 // Backup / restore of everything as one JSON object
@@ -73,5 +81,6 @@ export async function restore(obj) {
   const d = defaults();
   for (const k of KEYS) state[k] = obj[k] ?? d[k];
   if (!state.friends.includes(FIXED_FRIEND)) state.friends.unshift(FIXED_FRIEND);
+  migrate();
   await save(...KEYS);
 }

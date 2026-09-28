@@ -1,8 +1,9 @@
 import { MODES, MAPS, MENTAL, LAG, SKILL, BUILDS, WTYPES, SPECS, PLACES, STAGES, stageFor } from './constants.js';
 import { state, save, nextId } from './store.js';
-import { $, esc, toast, chips, toLocalInput, kdTier } from './util.js';
+import { $, esc, toast, chips, toLocalInput, kdTier, normalizeWeapons, copyWeapons } from './util.js';
 import { showTab } from './nav.js';
 import { renderSessionBar } from './stats.js';
+import { rsBefore, currentRs, setRs, fmtRs } from './rs.js';
 
 const DRAFT_KEY = 'si-draft';
 let f, editingId = null, rsSign = null;
@@ -10,7 +11,7 @@ let f, editingId = null, rsSign = null;
 function blankForm() {
   const c = state.carry || {};
   return {
-    ts: Date.now(), tsManual: false, mode: null, modeOther: '', result: null, place: null, stage: null, rs: '',
+    ts: Date.now(), tsManual: false, mode: null, modeOther: '', result: null, place: null, stage: null, rs: '', rsTotal: '',
     kills: '', deaths: '', kd: '', kdManual: false,
     squad: c.squad ? [...c.squad] : [], partySize: c.partySize ?? null, teammate: c.teammate ?? null, med: c.med ?? null,
     mental: null, lag: null, builds: [], weapons: {}, specs: [], specOther: '', map: '', mapOther: '', notes: '',
@@ -27,7 +28,8 @@ function loadDraft() {
     const d = JSON.parse(localStorage.getItem(DRAFT_KEY));
     if (!d) return null;
     rsSign = d.rsSign ?? null; delete d.rsSign;
-    return d;
+    d.weapons = normalizeWeapons(d.weapons);
+    return { ...blankForm(), ...d };
   } catch { return null; }
 }
 function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch {} }
@@ -73,12 +75,12 @@ function mountSaved() {
 export { mountSaved };
 
 function applyLoadout(s) {
-  f.builds = [...s.builds]; f.weapons = { ...s.weapons }; f.specs = [...s.specs]; f.specOther = s.specOther || '';
+  f.builds = [...s.builds]; f.weapons = copyWeapons(s.weapons); f.specs = [...s.specs]; f.specOther = s.specOther || '';
   $('#f-specOther').value = f.specOther;
   mountLoadout(); refresh();
 }
 
-const weaponHistory = t => [...new Set(state.entries.map(e => e.weapons[t]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+const weaponHistory = t => [...new Set(state.entries.flatMap(e => e.weapons[t] || []).filter(Boolean))].sort((a, b) => a.localeCompare(b));
 
 function mountLoadout() {
   chips($('#c-build'), BUILDS, () => f.builds, v => { f.builds = v; refresh(); }, true);
@@ -86,19 +88,25 @@ function mountLoadout() {
   const w = $('#weapons');
   w.innerHTML = '';
   WTYPES.forEach(t => {
-    const on = t in f.weapons, hist = weaponHistory(t);
+    const on = t in f.weapons, names = f.weapons[t] || [], hist = weaponHistory(t);
     const row = document.createElement('div');
     row.className = 'wrow';
+    // One weapon type can hold several names, e.g. ShAK-50 then Lewis Gun in the final round
     row.innerHTML = `<button type="button" class="chip ${on ? 'on' : ''}">${t}</button>
-      <input class="txt ${on ? '' : 'hide'}" list="dl-${t}" autocomplete="off" autocapitalize="characters" placeholder="${t} weapon${hist[0] ? ', e.g. ' + esc(hist[0]) : ''}" value="${esc(f.weapons[t] || '')}">
+      <div class="wnames ${on ? '' : 'hide'}">
+        ${names.map((n, i) => `<div class="wname"><input class="txt" data-i="${i}" list="dl-${t}" autocomplete="off" autocapitalize="characters" placeholder="${i ? 'Another ' + t.toLowerCase() + ' weapon' : t + ' weapon' + (hist[0] ? ', e.g. ' + esc(hist[0]) : '')}" value="${esc(n)}">${i ? `<button type="button" class="wx" data-i="${i}" aria-label="Remove">✕</button>` : ''}</div>`).join('')}
+        <button type="button" class="wmore">+ another ${t.toLowerCase()}</button>
+      </div>
       <datalist id="dl-${t}">${hist.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`;
-    const btn = row.querySelector('button'), inp = row.querySelector('input');
-    btn.onclick = () => {
-      if (t in f.weapons) delete f.weapons[t]; else f.weapons[t] = '';
+    const focusLast = () => { const ins = w.querySelectorAll(`input[list="dl-${t}"]`); ins[ins.length - 1]?.focus(); };
+    row.querySelector('.chip').onclick = () => {
+      if (on) delete f.weapons[t]; else f.weapons[t] = [''];
       mountLoadout(); refresh();
-      if (t in f.weapons) w.querySelector(`input[list="dl-${t}"]`).focus();
+      if (!on) focusLast();
     };
-    inp.oninput = () => { f.weapons[t] = inp.value; saveDraft(); };
+    row.querySelectorAll('input').forEach(inp => { inp.oninput = () => { f.weapons[t][+inp.dataset.i] = inp.value; saveDraft(); }; });
+    row.querySelectorAll('.wx').forEach(b => { b.onclick = () => { f.weapons[t].splice(+b.dataset.i, 1); mountLoadout(); refresh(); }; });
+    row.querySelector('.wmore').onclick = () => { f.weapons[t].push(''); mountLoadout(); refresh(); focusLast(); };
     w.appendChild(row);
   });
   if (!Object.keys(f.weapons).length) {
@@ -122,6 +130,16 @@ function paintKD() {
   if (t) i.classList.add(t);
 }
 
+// Your RS going into this game, if a rank score has been set
+const rsPrev = () => editingId || f.tsManual ? rsBefore(f.ts) : currentRs();
+
+function updateRsHint() {
+  const prev = rsPrev(), total = f.rsTotal === '' ? null : +f.rsTotal;
+  $('#rs-hint').innerHTML = prev == null
+    ? (total == null ? 'Typing your total RS here starts tracking your rank score (you can also set it on the Stats tab).' : `This sets your RS to <b>${fmtRs(total)}</b>. Add the +/− above too if you know it.`)
+    : `Before this game: <b>${fmtRs(prev)}</b>${total != null ? ` → <b class="${total - prev >= 0 ? 'pos' : 'neg'}">${total - prev >= 0 ? '+' : ''}${total - prev}</b>` : ''}`;
+}
+
 function refresh() {
   $('#f-modeOther').classList.toggle('hide', f.mode !== 'Other');
   $('#place-wrap').classList.toggle('hide', !placed());
@@ -139,6 +157,7 @@ function refresh() {
     $('#kd-stat').classList.toggle('auto', auto !== '');
   } else $('#kd-stat').classList.remove('auto');
   paintKD();
+  if (ranked()) updateRsHint();
   saveDraft();
 }
 
@@ -165,6 +184,7 @@ export function mountEntry() {
   $('#f-map').value = f.map;
   ['modeOther', 'specOther', 'mapOther', 'notes'].forEach(k => { $('#f-' + k).value = f[k]; });
   $('#f-rs').value = f.rs === '' ? '' : Math.abs(f.rs);
+  $('#f-rstotal').value = f.rsTotal;
   if (editingId) setSign(f.rs === '' ? null : f.rs < 0 ? -1 : 1); else setSign(rsSign);
   $('#f-k').value = f.kills; $('#f-d').value = f.deaths; $('#f-kd').value = f.kd;
   $('#editbar').classList.toggle('hide', !editingId);
@@ -201,6 +221,7 @@ function saveEntry() {
     place: placed() ? f.place : null,
     stage: ranked() ? f.stage : null,
     rs: ranked() && rsv !== '' ? rsSign * Math.abs(parseInt(rsv)) : null,
+    rsTotal: ranked() && f.rsTotal !== '' ? +f.rsTotal : null,
     kills: f.kills === '' ? null : +f.kills,
     deaths: f.deaths === '' ? null : +f.deaths,
     kd: f.kd === '' ? null : +(+f.kd).toFixed(2),
@@ -210,7 +231,7 @@ function saveEntry() {
     teammate: party ? f.teammate : null,
     med: f.med, mental: f.mental, lag: f.lag || 'None',
     builds: [...f.builds],
-    weapons: Object.fromEntries(Object.entries(f.weapons).map(([k, v]) => [k, v.trim()])),
+    weapons: Object.fromEntries(Object.entries(f.weapons).map(([k, v]) => [k, v.map(s => s.trim()).filter(Boolean)])),
     specs: [...f.specs], specOther: f.specs.includes('Other') ? f.specOther.trim() : '',
     map: f.map, mapOther: (f.map === 'LTM' || f.map === 'Other') ? f.mapOther.trim() : '',
     notes: f.notes.trim(),
@@ -226,6 +247,8 @@ function saveEntry() {
     toast('Game saved ✓');
   }
   save('entries', 'carry');
+  // An "RS after game" on your newest game becomes your current RS
+  if (e.rsTotal != null && (!state.rsAnchor || e.ts >= state.rsAnchor.ts)) setRs(e.rsTotal, e.ts);
   resetForm();
   showTab('record');
 }
@@ -235,8 +258,8 @@ export function editEntry(id) {
   if (!e) return;
   editingId = id;
   f = {
-    ...e, tsManual: true, rs: e.rs ?? '', kills: e.kills ?? '', deaths: e.deaths ?? '', kd: e.kd ?? '',
-    weapons: { ...e.weapons }, builds: [...e.builds], specs: [...e.specs], squad: [...e.squad],
+    ...e, tsManual: true, rs: e.rs ?? '', rsTotal: e.rsTotal ?? '', kills: e.kills ?? '', deaths: e.deaths ?? '', kd: e.kd ?? '',
+    weapons: copyWeapons(e.weapons), builds: [...e.builds], specs: [...e.specs], squad: [...e.squad],
     modeOther: e.modeOther || '', specOther: e.specOther || '', mapOther: e.mapOther || '', notes: e.notes || '', map: e.map || '',
   };
   showTab('entry');
@@ -253,6 +276,18 @@ export function initEntry() {
   $('#f-kd').oninput = e => {
     f.kd = e.target.value.replace(',', '.'); f.kdManual = f.kd !== '';
     if (!f.kdManual) refresh(); else { $('#kd-stat').classList.remove('auto'); paintKD(); saveDraft(); }
+  };
+  $('#f-rstotal').oninput = e => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+    f.rsTotal = e.target.value;
+    const prev = rsPrev();
+    if (prev != null && f.rsTotal !== '') {
+      const diff = +f.rsTotal - prev;
+      setSign(diff < 0 ? -1 : 1);
+      $('#f-rs').value = Math.abs(diff); f.rs = diff;
+      if (diff) { f.result = diff > 0 ? 'W' : 'L'; mountResult(); }
+    }
+    updateRsHint(); saveDraft();
   };
   $('#f-rs').oninput = e => { e.target.value = e.target.value.replace(/\D/g, ''); f.rs = e.target.value === '' ? '' : (rsSign || 1) * +e.target.value; saveDraft(); };
   $('#f-teammate').onchange = e => { f.teammate = e.target.value || null; saveDraft(); };
@@ -273,7 +308,7 @@ export function initEntry() {
     const n = $('#saveload-name').value.trim();
     if (!n) return;
     state.loadouts = state.loadouts.filter(l => l.name !== n);
-    state.loadouts.push({ name: n, builds: [...f.builds], weapons: { ...f.weapons }, specs: [...f.specs], specOther: f.specOther });
+    state.loadouts.push({ name: n, builds: [...f.builds], weapons: Object.fromEntries(Object.entries(f.weapons).map(([k, v]) => [k, v.map(s => s.trim()).filter(Boolean)])), specs: [...f.specs], specOther: f.specOther });
     save('loadouts');
     $('#saveload-name').value = ''; $('#saveload').classList.add('hide');
     mountSaved(); toast(`Saved “${n}”`);
