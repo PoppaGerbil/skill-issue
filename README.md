@@ -34,7 +34,7 @@ If you skip step 2, installed copies keep serving the old cached files.
 
 | Path | What |
 |---|---|
-| `index.html` | Page layout for all three tabs |
+| `index.html` | Page layout for all four tabs |
 | `css/app.css` | Styles |
 | `js/main.js` | Startup, tab wiring, service worker registration |
 | `js/constants.js` | Modes, maps, specs, placements and other option lists |
