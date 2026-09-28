@@ -28,6 +28,7 @@
 
   <!-- ENTRY -->
   <section id="tab-entry" class="tab active">
+    <div id="sessbar" class="sessbar hide" role="button"></div>
     <div id="editbar" class="editbar hide"><span>Editing an entry</span><button id="cancel-edit">Cancel</button></div>
 
     <div class="card">
@@ -120,11 +121,18 @@
   <!-- RECORD -->
   <section id="tab-record" class="tab">
     <h2 id="rec-count">Record</h2>
+    <div id="rec-summary" class="rec-summary"></div>
     <div class="toolbar">
       <div class="seg" id="rec-sort" style="flex:none"><button data-v="new" class="on">Newest</button><button data-v="old">Oldest</button></div>
       <div class="row"><button class="btn sm" id="exp-xlsx">Export .xlsx</button><button class="btn sm" id="exp-csv">.csv</button></div>
     </div>
     <div id="rec-list"></div>
+  </section>
+
+  <!-- STATS -->
+  <section id="tab-stats" class="tab">
+    <h2>Stats</h2>
+    <div id="stats-root"></div>
   </section>
 
   <!-- GRAPH -->
@@ -152,6 +160,7 @@
   <nav class="bottom">
     <button data-tab="entry" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Entry</button>
     <button data-tab="record"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Record</button>
+    <button data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>Stats</button>
     <button data-tab="graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 4 3 5-7"/></svg>Graph</button>
   </nav>
 

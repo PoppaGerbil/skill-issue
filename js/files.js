@@ -42,6 +42,7 @@ export const COLS = [
   ['Spec', e => e.specs.map(s => s === 'Other' && e.specOther ? e.specOther : s).join(' + ')],
   ['Map', e => mapName(e) ?? ''],
   ['Notes', e => e.notes ?? ''],
+  ['Session', e => { const s = e.sessionId && (state.sessions.find(x => x.id === e.sessionId) || (state.activeSession?.id === e.sessionId && state.activeSession)); return s ? new Date(s.start) : ''; }],
 ];
 const sorted = () => [...state.entries].sort((a, b) => a.ts - b.ts);
 
@@ -58,7 +59,7 @@ export function exportCsv() {
   saveFile(`skill-issue-${stamp()}.csv`, new Blob([toCsv(rows)], { type: 'text/csv' }));
 }
 
-function loadScript(src) {
+export function loadScript(src) {
   return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Couldn’t load ' + src)); document.head.appendChild(s); });
 }
 

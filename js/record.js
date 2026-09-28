@@ -2,6 +2,7 @@ import { state, save } from './store.js';
 import { $, $$, esc, toast, fmtDT, placeLabel, isMixed, isLaggy, modeName, mapName, squadName, kdTier, confirmTap } from './util.js';
 import { editEntry } from './entry.js';
 import { exportCsv, exportXlsx } from './files.js';
+import { agg } from './stats.js';
 
 let sort = 'new', openId = null;
 
@@ -32,6 +33,8 @@ function card(e) {
 export function renderRecord() {
   const list = [...state.entries].sort((a, b) => sort === 'new' ? b.ts - a.ts : a.ts - b.ts);
   $('#rec-count').textContent = `Record · ${list.length} game${list.length === 1 ? '' : 's'}`;
+  const a = agg(list), kd = a.kdTotal ?? a.kdAvg;
+  $('#rec-summary').innerHTML = list.length ? `${a.winPct == null ? '' : Math.round(a.winPct) + '% W · '}<span class="${kdTier(kd)}">${kd ?? '–'}</span> K/D${a.rsN ? ` · <span class="${a.rsNet >= 0 ? 'pos' : 'neg'}">${a.rsNet > 0 ? '+' : ''}${a.rsNet}</span> RS` : ''}` : '';
   $('#rec-list').innerHTML = list.length ? list.map(card).join('')
     : `<div class="empty"><div class="big">No games yet</div>Log your first game on the Entry tab and it’ll show up here.</div>`;
   $$('.rec').forEach(el => el.onclick = ev => {

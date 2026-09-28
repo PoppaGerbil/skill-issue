@@ -36,6 +36,9 @@ const defaults = () => ({
   ],
   graph: { metric: 'kd', range: 0, view: 'game', lines: [line('All games', COLORS[0])] },
   carry: null,   // squad / party size / teammate skill / medicated carried to the next entry
+  stats: { range: 0, filters: {} },
+  sessions: [],        // finished sessions: { id, start, end }
+  activeSession: null, // { id, start } while a session is running
 });
 
 export const KEYS = Object.keys(defaults());
@@ -52,7 +55,12 @@ export async function load() {
   navigator.storage?.persist?.().catch(() => {});
 }
 
+// ?demo fills the app with sample games in memory only, for previewing. Nothing is saved.
+export let demoMode = false;
+export const setDemo = () => { demoMode = true; };
+
 export function save(...keys) {
+  if (demoMode) return Promise.resolve();
   return Promise.all(keys.map(k => dbSet(k, state[k]))).catch(e => toast('Couldn’t save: ' + e.message));
 }
 

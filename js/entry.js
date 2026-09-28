@@ -2,6 +2,7 @@ import { MODES, MAPS, MENTAL, LAG, SKILL, BUILDS, WTYPES, SPECS, PLACES, STAGES,
 import { state, save, nextId } from './store.js';
 import { $, esc, toast, chips, toLocalInput, kdTier } from './util.js';
 import { showTab } from './nav.js';
+import { renderSessionBar } from './stats.js';
 
 const DRAFT_KEY = 'si-draft';
 let f, editingId = null, rsSign = null;
@@ -168,6 +169,7 @@ export function mountEntry() {
   $('#f-k').value = f.kills; $('#f-d').value = f.deaths; $('#f-kd').value = f.kd;
   $('#editbar').classList.toggle('hide', !editingId);
   $('#save').textContent = editingId ? 'Update entry' : 'Save game';
+  renderSessionBar();
   refresh();
 }
 
@@ -212,6 +214,8 @@ function saveEntry() {
     specs: [...f.specs], specOther: f.specs.includes('Other') ? f.specOther.trim() : '',
     map: f.map, mapOther: (f.map === 'LTM' || f.map === 'Other') ? f.mapOther.trim() : '',
     notes: f.notes.trim(),
+    // Games logged while a session is running are tagged to it
+    sessionId: editingId ? (f.sessionId ?? null) : (state.activeSession?.id ?? null),
   };
   if (editingId) {
     state.entries = state.entries.map(x => x.id === editingId ? e : x);

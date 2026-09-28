@@ -8,7 +8,7 @@ An installable web app (PWA) for logging and graphing THE FINALS games. Plain HT
 python3 -m http.server 5173
 ```
 
-Then open http://localhost:5173. Offline caching is turned off on localhost so edits show up right away (add `?sw` to the URL to test it).
+Then open http://localhost:5173. Offline caching is turned off on localhost so edits show up right away (add `?sw` to the URL to test it). Add `?demo` to preview with sample games; nothing is saved in demo mode.
 
 ## Put it on your phone
 
@@ -41,11 +41,14 @@ If you skip step 2, installed copies keep serving the old cached files.
 | `js/store.js` | IndexedDB storage, defaults, backup/restore |
 | `js/entry.js` | Entry form |
 | `js/record.js` | Record list, edit/delete |
-| `js/graph.js` | Line builder, filters, chart, graph exports |
+| `js/graph.js` | Line builder, chart, graph exports |
+| `js/stats.js` | Stats tab: totals, ranked/cashout, sessions, highlights, breakdowns |
+| `js/filters.js` | Filter fields shared by Graph and Stats |
+| `js/demo.js` | Sample data for previewing (`?demo`, never saved) |
 | `js/settings.js` | Gear menu (backup, names, loadouts, presets) |
 | `js/files.js` | xlsx/csv/json export and the save/share step |
 | `sw.js` | Offline cache |
-| `vendor/` | Chart.js 4.4.1, SheetJS 0.20.3 |
+| `vendor/` | Chart.js 4.4.1, SheetJS 0.20.3, html2canvas 1.4.1 |
 | `mockup/` | The original clickable mockup (sample data, not used by the app) |
 
 To add a map, spec or mode, edit the lists in `js/constants.js`.

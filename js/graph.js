@@ -1,6 +1,7 @@
-import { MODES, MAPS, MENTAL, SKILL, BUILDS, WTYPES, SPECS, STAGES, COLORS } from './constants.js';
+import { COLORS } from './constants.js';
 import { state, save, line } from './store.js';
 import { $, $$, esc, toast, clone, uid, fmtDate, fmtDT, placeLabel, isMixed, isLaggy, isSolo, modeName, mapName, squadName, winOf, openSheet } from './util.js';
+import { matches, summary, filterSectionsHTML, bindFilterSections } from './filters.js';
 import { saveFile, toCsv } from './files.js';
 
 const METRICS = [{ v: 'kd', l: 'K/D' }, { v: 'kills', l: 'Kills' }, { v: 'deaths', l: 'Deaths' }, { v: 'win', l: 'Win %' }, { v: 'place', l: 'Placement' }, { v: 'rs', l: 'RS' }];
@@ -9,25 +10,6 @@ const VIEWS = [{ v: 'game', l: 'Per game' }, { v: 'day', l: 'Daily' }, { v: 'wee
 const Y_TITLES = { kd: 'K/D', kills: 'Kills', deaths: 'Deaths', win: 'Win rate (%)', place: 'Placement (1st at top)', rs: 'RS (running total)' };
 const X_TITLES = { game: 'Date (one point per game)', day: 'Date (daily average)', week: 'Week' };
 const NOTES = { kd: '', kills: '', deaths: '', win: 'Ranked: RS gained = win, RS lost = loss', place: 'Cashout & Ranked only · 5th/6th = 5.5, 7th/8th = 7.5', rs: 'Running RS total · Ranked only' };
-
-// Every filterable field. Within a field options are OR'd, across fields they're AND'd.
-const FF = [
-  { k: 'mode', l: 'Game mode', o: () => MODES, g: e => [e.mode] },
-  { k: 'result', l: 'Result', note: 'Ranked uses RS +/−', o: () => ['Win', 'Loss'], g: e => [winOf(e) === 'W' ? 'Win' : winOf(e) === 'L' ? 'Loss' : null] },
-  { k: 'stage', l: 'Ranked stage', o: () => STAGES, g: e => [e.stage] },
-  { k: 'build', l: 'Build', o: () => BUILDS, g: e => e.builds },
-  { k: 'weapon', l: 'Weapon type', o: () => WTYPES, g: e => Object.keys(e.weapons) },
-  { k: 'spec', l: 'Spec', o: () => SPECS, g: e => e.specs },
-  { k: 'map', l: 'Map', o: () => [...MAPS, 'LTM', 'Other'], g: e => [e.map] },
-  { k: 'squad', l: 'Party, Solo, or friend', note: 'Party = any game with Party or a named friend', o: () => ['Solo', 'Party', ...state.friends], g: e => isSolo(e) ? ['Solo'] : ['Party', ...e.squad.filter(x => x !== 'Party')] },
-  { k: 'partySize', l: 'Party size', note: 'party games only', o: () => ['2', '3', '4', '5', '6', '7', '8', '9', '10'], g: e => [String(e.partySize)] },
-  { k: 'teammate', l: 'Teammate skill', note: 'party games only', o: () => SKILL, g: e => [e.teammate] },
-  { k: 'lag', l: 'Lag', o: () => ['Lag', 'No lag'], g: e => [isLaggy(e) ? 'Lag' : 'No lag'] },
-  { k: 'med', l: 'Medicated', o: () => ['Yes', 'No'], g: e => [e.med] },
-  { k: 'mental', l: 'Mental + Physical', o: () => MENTAL, g: e => [e.mental] },
-];
-const matches = (e, fl) => FF.every(ff => { const s = fl[ff.k]; return !s || !s.length || ff.g(e).some(v => s.includes(v)); });
-const summary = fl => { const p = FF.filter(ff => fl[ff.k]?.length).map(ff => fl[ff.k].join(' or ')); return p.length ? p.join(' · ') : 'All games'; };
 
 const G = () => state.graph;
 let chart;
@@ -162,9 +144,9 @@ function openEditor(ln, isNew) {
         <div class="card"><div class="lbl">Name</div><input id="ed-name" class="txt" value="${esc(draft.name)}">
           <div class="sub lbl">Color</div><div class="swatches">${COLORS.map(c => `<span class="sw ${c === draft.color ? 'on' : ''}" data-c="${c}" style="background:${c}"></span>`).join('')}</div></div>
         <div class="row" style="justify-content:space-between;margin:6px 2px"><span class="hint" style="margin:0">Matches <b style="color:var(--text)">${n}</b> game${n === 1 ? '' : 's'}. Blank field = all.</span><button class="btn sm" id="ed-clear">Clear filters</button></div>
-        ${FF.map(ff => `<div class="fsec"><div class="sublbl"><span>${ff.l}${ff.note ? ` <span style="opacity:.7">(${ff.note})</span>` : ''}</span><em>${draft.filters[ff.k]?.length ? draft.filters[ff.k].length + ' selected' : 'all'}</em></div><div class="chips" data-k="${ff.k}"></div></div>`).join('')}`;
+        ${filterSectionsHTML(draft.filters)}`;
       const keep = fn => () => { draft.name = $('#ed-name').value; const y = sh.scrollTop; fn(); render(); sh.scrollTop = y; };
-      FF.forEach(ff => chips(sh.querySelector(`[data-k="${ff.k}"]`), ff.o(), () => draft.filters[ff.k] || [], v => keep(() => { draft.filters[ff.k] = v; })(), true));
+      bindFilterSections(sh, draft.filters, keep(() => {}));
       sh.querySelectorAll('.sw').forEach(s => s.onclick = keep(() => { draft.color = s.dataset.c; }));
       $('#ed-clear').onclick = keep(() => { draft.filters = {}; });
       $('#ed-cancel').onclick = close;
@@ -205,6 +187,13 @@ function exportGraphCsv() {
   G().lines.filter(l => !l.hidden).forEach(l => series(l).forEach(p => rows.push([l.name, summary(l.filters), new Date(p.x), p.y, p.games.length])));
   if (rows.length === 1) return toast('Nothing on the graph to export');
   saveFile(`skill-issue-graph-data-${new Date().toISOString().slice(0, 10)}.csv`, new Blob([toCsv(rows)], { type: 'text/csv' }));
+}
+
+// Used by Stats "Graph this": adds a line and saves it
+export function addLine(name, filters) {
+  const n = G().lines.length;
+  G().lines.push(line(name, COLORS[n % COLORS.length], filters));
+  persist();
 }
 
 export function renderGraph() {
