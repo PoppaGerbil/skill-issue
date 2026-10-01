@@ -51,14 +51,12 @@ export function openSettings() {
         if (!file) return;
         let obj;
         try { obj = JSON.parse(await file.text()); } catch { return toast('That file isn’t a Skill Issue backup'); }
-        const n = obj?.entries?.length ?? 0;
-        const btn = $('#st-restore');
-        btn.textContent = `Replace everything with ${n} games from backup?`;
-        btn.classList.add('danger');
-        btn.onclick = async () => {
-          try { await restore(obj); } catch (e) { return toast(e.message); }
-          toast(`Restored ${n} games`); close(); location.reload();
-        };
+        if (obj?.app !== 'skill-issue' || !Array.isArray(obj.entries)) return toast('That file isn’t a Skill Issue backup');
+        const n = obj.entries.length;
+        if (!confirm(`Replace everything in this app (${state.entries.length} games) with the ${n} games in this backup?`)) return;
+        try { await restore(obj); } catch (e) { return toast(e.message); }
+        toast(`Restored ${n} games`); close();
+        setTimeout(() => location.reload(), 600);
       };
       sh.querySelectorAll('#st-friends [data-i]').forEach(b => b.onclick = () => confirmTap(b, 'Sure?', () => {
         const name = others[+b.dataset.i];

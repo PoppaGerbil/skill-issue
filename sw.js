@@ -2,7 +2,7 @@
 // Bump VERSION whenever any file changes so phones pick up the new version.
 // The personal copy registers this same file as sw.js?app=me with scope me/.
 const APP = new URL(location).searchParams.get('app') === 'me' ? 'me' : 'public';
-const VERSION = '1.3.0';
+const VERSION = '1.3.1';
 const CACHE = `skill-issue-${APP}-v${VERSION}`;
 const SHARED = [
   'css/app.css',

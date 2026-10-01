@@ -86,11 +86,17 @@ export function exportBackup(snapshot) {
   saveFile(`skill-issue-backup-${stamp()}.json`, new Blob([JSON.stringify(snapshot, null, 1)], { type: 'application/json' }));
 }
 
+// The input has to be in the page: iPhone Safari (especially a home screen app) can skip the
+// "change" event on a detached file input, so picking a file silently does nothing.
 export function pickFile(accept) {
   return new Promise(res => {
     const i = document.createElement('input');
     i.type = 'file'; i.accept = accept;
-    i.onchange = () => res(i.files[0] || null);
+    i.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(i);
+    const done = f => { i.remove(); res(f); };
+    i.addEventListener('change', () => done(i.files[0] || null), { once: true });
+    i.addEventListener('cancel', () => done(null), { once: true });
     i.click();
   });
 }
