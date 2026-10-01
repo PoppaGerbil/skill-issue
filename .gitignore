@@ -1,2 +1,7 @@
 .DS_Store
 .claude/
+
+# personal data: never publish
+PoppaGerbil_*
+skill-issue-backup-*.json
+personal-data/

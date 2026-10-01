@@ -211,3 +211,7 @@ body.demo header.top::after { content: 'DEMO · NOT SAVED'; position: absolute; 
 .wmore { justify-self: start; background: none; border: none; color: var(--muted); font-size: 13px; padding: 2px 2px 4px; text-decoration: underline; }
 
 .myrs .bigrs { font-size: 26px; font-weight: 900; line-height: 1.2; }
+
+/* personal copy: player tag under the logo */
+header.top { flex-wrap: wrap; }
+header.top .player { order: 3; flex-basis: 100%; font-size: 11px; color: var(--accent2); text-decoration: none; letter-spacing: .04em; margin-top: 1px; }

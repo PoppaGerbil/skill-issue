@@ -4,6 +4,7 @@ import { MODES, MAPS, MENTAL, SKILL, BUILDS, WTYPES, SPECS, STAGES } from './con
 import { state } from './store.js';
 import { isLaggy, isSolo, winOf, chips, weaponList } from './util.js';
 
+
 export const TOD = ['Morning (5am–12pm)', 'Afternoon (12–5pm)', 'Evening (5–10pm)', 'Late night (10pm–5am)'];
 export const todOf = e => {
   const h = new Date(e.ts).getHours();
@@ -37,7 +38,7 @@ export const FF = [
   { k: 'wname', l: 'Weapon name', o: weaponNames, g: weaponList },
   { k: 'spec', l: 'Spec', o: () => SPECS, g: e => e.specs },
   { k: 'map', l: 'Map', o: () => [...MAPS, 'LTM', 'Other'], g: e => [e.map] },
-  { k: 'squad', l: 'Party, Solo, or friend', note: 'Party = any game with Party or a named friend', o: () => ['Solo', 'Party', ...state.friends], g: e => isSolo(e) ? ['Solo'] : ['Party', ...e.squad.filter(x => x !== 'Party')] },
+  { k: 'squad', l: 'Party, Solo, or friend', note: 'Party = any game with Party or a named friend', o: () => ['Solo', 'Party', ...state.friends], g: e => !e.squad.length ? [] : isSolo(e) ? ['Solo'] : ['Party', ...e.squad.filter(x => x !== 'Party')] },
   { k: 'partySize', l: 'Party size', note: 'party games only', o: () => ['2', '3', '4', '5', '6', '7', '8', '9', '10'], g: e => [e.partySize == null ? null : String(e.partySize)] },
   { k: 'teammate', l: 'Teammate skill', note: 'party games only', o: () => SKILL, g: e => [e.teammate] },
   { k: 'lag', l: 'Lag', o: () => ['Lag', 'No lag'], g: e => [isLaggy(e) ? 'Lag' : 'No lag'] },

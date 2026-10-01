@@ -1,4 +1,4 @@
-import { PLACES, LAGGY } from './constants.js';
+import { ALL_PLACES, LAGGY } from './constants.js';
 
 export const $ = s => document.querySelector(s);
 export const $$ = s => [...document.querySelectorAll(s)];
@@ -40,7 +40,7 @@ export const toLocalInput = ts => { const d = new Date(ts); return `${d.getFullY
 export const fmtDate = ts => new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 export const fmtDT = ts => new Date(ts).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-export const placeLabel = v => PLACES.find(p => p.v === v)?.l ?? '';
+export const placeLabel = v => ALL_PLACES.find(p => p.v === v)?.l ?? '';
 export const isMixed = e => e.builds.length > 1;
 // Weapons are stored as { Automatic: ['ShAK-50', 'Lewis Gun'], Melee: [] }. Older data used one string per type.
 export const normalizeWeapons = w => Object.fromEntries(Object.entries(w || {}).map(([t, v]) => [t, Array.isArray(v) ? v : v ? [v] : []]));
@@ -49,8 +49,10 @@ export const weaponList = e => Object.values(e.weapons).flat().filter(Boolean);
 export const isLaggy = e => LAGGY.has(e.lag);
 export const modeName = e => e.mode === 'Other' ? (e.modeOther || 'Other') : e.mode;
 export const mapName = e => (e.map === 'LTM' || e.map === 'Other') && e.mapOther ? `${e.map}: ${e.mapOther}` : e.map;
-export const isSolo = e => !e.squad.length || e.squad.includes('Solo');
-export const squadName = e => isSolo(e) ? 'Solo' : e.squad.map(s => s === 'Party' ? (e.partySize ? `Party of ${e.partySize}` : 'Party') : s).join(' + ');
+// An empty squad means unknown (e.g. imported games); it counts as neither solo nor partied
+export const isSolo = e => e.squad.includes('Solo');
+export const isPartied = e => e.squad.some(s => s !== 'Solo');
+export const squadName = e => !e.squad.length ? 'Squad unknown' : isSolo(e) ? 'Solo' : e.squad.map(s => s === 'Party' ? (e.partySize ? `Party of ${e.partySize}` : 'Party') : s).join(' + ');
 // Ranked: RS gained = win, RS lost = loss (for graphing). Falls back to the entered result.
 export const winOf = e => e.mode === 'Ranked' && e.rs ? (e.rs > 0 ? 'W' : 'L') : e.result;
 export const kdTier = v => v === '' || v == null || isNaN(v) ? '' : v < 1 ? 'kd-bad' : v < 2 ? 'kd-ok' : v < 3 ? 'kd-good' : 'kd-ruby';

@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "Skill Issue · PoppaGerbil",
+  "short_name": "Poppa SI",
+  "description": "PoppaGerbil's personal THE FINALS tracker.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0d11",
+  "theme_color": "#0c0d11",
+  "icons": [
+    { "src": "../icons/me-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "../icons/me-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "../icons/me-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

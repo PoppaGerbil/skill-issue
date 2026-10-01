@@ -1,6 +1,6 @@
 import { COLORS } from './constants.js';
 import { state, save, line } from './store.js';
-import { $, $$, esc, toast, clone, uid, fmtDate, fmtDT, placeLabel, isMixed, isLaggy, isSolo, modeName, mapName, squadName, winOf, openSheet } from './util.js';
+import { $, $$, esc, toast, clone, uid, fmtDate, fmtDT, placeLabel, isMixed, isLaggy, isPartied, modeName, mapName, squadName, winOf, openSheet } from './util.js';
 import { matches, summary, filterSectionsHTML, bindFilterSections } from './filters.js';
 import { saveFile, toCsv } from './files.js';
 
@@ -89,7 +89,7 @@ function drawChart() {
             afterLabel: c => {
               const g = c.raw.games;
               if (!perGame) {
-                const lag = g.filter(isLaggy).length, sq = g.filter(e => !isSolo(e)).length;
+                const lag = g.filter(isLaggy).length, sq = g.filter(isPartied).length;
                 return [`   ${g.length} game${g.length > 1 ? 's' : ''}`, lag ? `   ⚠ ${lag} with lag` : null, sq ? `   👥 ${sq} partied` : null].filter(Boolean);
               }
               const e = g[0];
@@ -97,7 +97,7 @@ function drawChart() {
                 `   ${modeName(e)} · ${mapName(e) || '—'} · ${e.builds.join('+') || '—'}${isMixed(e) ? ' (mixed)' : ''}`,
                 isLaggy(e) ? `   ⚠ Lag: ${e.lag}` : null,
                 e.stage ? `   ${placeLabel(e.place)} · ${e.stage}${e.rs != null ? ` · ${e.rs > 0 ? '+' : ''}${e.rs} RS` : ''}${e.rsTotal != null ? ` → ${e.rsTotal.toLocaleString()}` : ''}` : null,
-                !isSolo(e) ? `   👥 ${squadName(e)}${e.teammate ? ' · ' + e.teammate : ''}` : null,
+                isPartied(e) ? `   👥 ${squadName(e)}${e.teammate ? ' · ' + e.teammate : ''}` : null,
               ].filter(Boolean);
             },
           },

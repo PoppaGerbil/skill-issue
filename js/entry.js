@@ -1,11 +1,12 @@
-import { MODES, MAPS, MENTAL, LAG, SKILL, BUILDS, WTYPES, SPECS, PLACES, STAGES, stageFor } from './constants.js';
+import { MODES, MAPS, MENTAL, LAG, SKILL, BUILDS, WTYPES, SPECS, PLACES, PLACED_MODES, STAGES, stageFor } from './constants.js';
+import { APP } from './config.js';
 import { state, save, nextId } from './store.js';
 import { $, esc, toast, chips, toLocalInput, kdTier, normalizeWeapons, copyWeapons } from './util.js';
 import { showTab } from './nav.js';
 import { renderSessionBar } from './stats.js';
 import { rsBefore, currentRs, setRs, fmtRs } from './rs.js';
 
-const DRAFT_KEY = 'si-draft';
+const DRAFT_KEY = APP.draftKey;
 let f, editingId = null, rsSign = null;
 
 function blankForm() {
@@ -35,7 +36,7 @@ function loadDraft() {
 function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch {} }
 
 const ranked = () => f.mode === 'Ranked';
-const placed = () => f.mode === 'Cashout' || f.mode === 'Ranked';
+const placed = () => PLACED_MODES.includes(f.mode);
 
 function mountResult() {
   chips($('#c-result'), [{ v: 'W', l: 'Win' }, { v: 'L', l: 'Loss' }], () => f.result, v => { f.result = v; refresh(); }, false, v => v === 'W' ? 'w' : 'l');
@@ -213,7 +214,9 @@ function saveEntry() {
   if (ranked() && rsv !== '' && !rsSign) return toast('Pick + or − for RS');
   if (ranked() && rsv !== '' && isNaN(parseInt(rsv))) return toast('RS needs to be a number');
   const party = f.squad.includes('Party');
+  const orig = editingId ? state.entries.find(x => x.id === editingId) : null;
   const e = {
+    ...orig,
     id: editingId ?? nextId(),
     ts: f.tsManual || editingId ? f.ts : Date.now(),
     mode: f.mode, modeOther: f.mode === 'Other' ? f.modeOther.trim() : '',

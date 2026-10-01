@@ -2,8 +2,9 @@
 // and each key is written back whenever it changes.
 import { COLORS, FIXED_FRIEND } from './constants.js';
 import { toast, uid, normalizeWeapons } from './util.js';
+import { APP } from './config.js';
 
-const DB_NAME = 'skill-issue', STORE = 'kv', SCHEMA = 1;
+const DB_NAME = APP.dbName, STORE = 'kv', SCHEMA = 1;
 let dbp;
 function openDb() {
   return dbp ??= new Promise((res, rej) => {

@@ -7,6 +7,7 @@ import { initRecord, renderRecord } from './record.js';
 import { initGraph, renderGraph } from './graph.js';
 import { openSettings } from './settings.js';
 import { initStatsTab, renderStats } from './stats.js';
+import { APP } from './config.js';
 
 async function start() {
   try { await load(); }
@@ -28,6 +29,7 @@ async function start() {
   initRecord();
   initGraph();
   initStatsTab();
+  if (APP.player) { const p = document.createElement('a'); p.className = 'player'; p.href = APP.profileUrl; p.target = '_blank'; p.rel = 'noopener'; p.textContent = APP.player; $('header.top .brand').after(p); }
   showTab('entry');
 
   // Keep the auto date/time fresh when coming back to the app
@@ -39,5 +41,5 @@ start();
 // Offline caching is skipped on localhost so edits show up immediately while developing
 const isDev = ['localhost', '127.0.0.1'].includes(location.hostname) && !location.search.includes('sw');
 if ('serviceWorker' in navigator && location.protocol !== 'file:' && !isDev) {
-  navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW registration failed', e));
+  navigator.serviceWorker.register(APP.swUrl, { scope: APP.swScope }).catch(e => console.warn('SW registration failed', e));
 }

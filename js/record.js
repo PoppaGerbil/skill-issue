@@ -24,6 +24,10 @@ function card(e) {
       <div><b>Spec:</b> ${specs}</div>
       ${e.squad.includes('Party') ? `<div><b>Teammates:</b> ${e.teammate || '—'}</div>` : ''}
       <div><b>Lag:</b> ${e.lag}</div>
+      ${e.damage != null ? `<div><b>Damage:</b> ${e.damage.toLocaleString()}${e.revives != null ? ` · <b>Revives:</b> ${e.revives}` : ''}</div>` : ''}
+      ${e.gadgets?.length ? `<div><b>Gadgets:</b> ${e.gadgets.map(esc).join(', ')}</div>` : ''}
+      ${e.rounds?.length > 1 ? `<div><b>Rounds:</b> ${e.rounds.map(r => `${esc(r.place)} ${r.kills}/${r.deaths}`).join(' · ')}</div>` : ''}
+      ${e.source && e.source !== 'manual' ? `<div><b>Source:</b> ${esc(e.source)}</div>` : ''}
       ${e.notes ? `<div><b>Notes:</b> ${esc(e.notes)}</div>` : ''}
       <div class="row" style="margin-top:10px"><button class="btn sm" data-act="edit">Edit</button><button class="btn sm" data-act="del">Delete</button></div>
     </div>` : ''}

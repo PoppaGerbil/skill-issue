@@ -42,7 +42,11 @@ export const COLS = [
   ...WTYPES.map(t => [t, e => t in e.weapons ? (e.weapons[t].join(' + ') || '✓') : '']),
   ['Spec', e => e.specs.map(s => s === 'Other' && e.specOther ? e.specOther : s).join(' + ')],
   ['Map', e => mapName(e) ?? ''],
+  ['Damage', e => e.damage ?? ''],
+  ['Revives', e => e.revives ?? ''],
+  ['Gadgets', e => (e.gadgets || []).join(' + ')],
   ['Notes', e => e.notes ?? ''],
+  ['Source', e => e.source ?? 'manual'],
   ['Session', e => { const s = e.sessionId && (state.sessions.find(x => x.id === e.sessionId) || (state.activeSession?.id === e.sessionId && state.activeSession)); return s ? new Date(s.start) : ''; }],
 ];
 const sorted = () => [...state.entries].sort((a, b) => a.ts - b.ts);

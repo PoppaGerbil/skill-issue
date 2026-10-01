@@ -1,5 +1,5 @@
 // Stats tab: headline numbers, ranked/cashout summaries, sessions, highlights and breakdown tables
-import { PLACES, STAGES } from './constants.js';
+import { ALL_PLACES, STAGES } from './constants.js';
 import { state, save } from './store.js';
 import { $, esc, toast, uid, clone, fmtDT, fmtDate, isMixed, mapName, winOf, kdTier, openSheet, confirmTap } from './util.js';
 import { FFK, matches, summary, filterCount, filterSectionsHTML, bindFilterSections, SPOS } from './filters.js';
@@ -313,7 +313,7 @@ export function renderStats() {
           <div class="tile"><span>1st place</span><b>${cashPlaced.length ? Math.round(cashPlaced.filter(e => e.place === 1).length / cashPlaced.length * 100) + '%' : '–'}</b></div>
           <div class="tile"><span>Avg placement</span><b>${num(avgPlace(cashPlaced))}</b></div>
         </div>
-        ${cashPlaced.length ? `<div class="sub sublbl">Placements</div>${bars(PLACES.map(p => [p.l, cashPlaced.filter(e => e.place === p.v).length]), cashPlaced.length)}` : ''}
+        ${cashPlaced.length ? `<div class="sub sublbl">Placements</div>${bars(ALL_PLACES.filter(p => p.v % 1 === 0 || p.v === 5.5 || p.v === 7.5 || cashPlaced.some(e => e.place === p.v)).map(p => [p.l, cashPlaced.filter(e => e.place === p.v).length]), cashPlaced.length)}` : ''}
       </div>` : ''}
 
       <h2>Highlights</h2>
